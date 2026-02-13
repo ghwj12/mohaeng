@@ -1,0 +1,28 @@
+### STS ###
+HELP.md
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+.xml
+bin/
+/src/main/generated/
+
+# === OS ===
+Thumbs.db
+.DS_Store
+
+# === Gradle ===
+.gradle
+build/
+gradle/wrapper/gradle-wrapper.jar
+
+# === Logs ===
+*.log
+
+# === Application secrets ===
+application-*.yml
+application*.properties
