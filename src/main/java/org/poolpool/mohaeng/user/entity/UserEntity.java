@@ -89,9 +89,10 @@ public class UserEntity {
     
     @PrePersist
     public void prePersist() {
-    	createdAt = LocalDateTime.now();
     	userRole = UserRole.USER;
     	userStatus = UserStatus.ACTIVE;
+    	createdAt = LocalDateTime.now();
+    	lastLoginAt = LocalDate.now();
     }
     
     @PreUpdate
