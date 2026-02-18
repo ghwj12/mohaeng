@@ -79,7 +79,7 @@ public class UserDto {
     			.build();
     }
     
-    public UserDto fromEntity(UserEntity userEntity) {
+    public static UserDto fromEntity(UserEntity userEntity) {
     	if (userEntity == null) return null;
     	
     	return UserDto.builder()

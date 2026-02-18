@@ -54,12 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if(uri.startsWith("/oauth2") || uri.startsWith("/login/oauth2")) return true;
 
         // 3) permitAll API (GET)
-        if (HttpMethod.GET.matches(method) && (uri.startsWith("/api/user") || uri.startsWith("/api/events"))) {
+        if (HttpMethod.GET.matches(method) && uri.startsWith("/api/events")) {
             return true;
         }
 
-        // 4) 회원가입/아이디체크 permitAll
-        if (HttpMethod.POST.matches(method) && (uri.equals("/api/user/checkId") || uri.equals("/api/user/createUser"))) {
+        // 4) permitAll API (POST)
+        if (HttpMethod.POST.matches(method) && (uri.startsWith("/api/user"))) {
             return true;
         }
 

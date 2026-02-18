@@ -40,4 +40,19 @@ public class UserServiceImpl implements UserService{
 		return userRepository.save(user.toEntity()) != null ? 1 : 0;
 	    
 	}
+
+	//이메일 찾기
+	@Override
+	public UserDto findByNameAndPhone(String name, String phone) {
+		return UserDto.fromEntity(userRepository.findByNameAndPhone(name, phone));
+	}
+
+	//개인정보 조회
+	@Override
+	public UserDto selectUser(String userId) {
+		return UserDto.fromEntity(
+		        userRepository.findById(Long.valueOf(userId))
+		                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."))
+		);
+	}
 }

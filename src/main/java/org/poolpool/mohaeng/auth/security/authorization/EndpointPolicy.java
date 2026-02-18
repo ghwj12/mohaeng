@@ -6,15 +6,15 @@ public final class EndpointPolicy {
     //누구나 가능
     public static final String[] PUBLIC_GET = {
             "/api/events/**",
-            "/api/user/searchEmail",	//이메일 찾기
-            "/api/user/renewPwd",		//비밀번호 찾기
             "/oauth2/**", "/login/oauth2/**",	//소셜 계정 연동
             "/api/eventInquiry/list"	//문의 목록
     };
 
     public static final String[] PUBLIC_POST = {
             "/api/user/checkId",	//이메일 중복 확인
-            "/api/user/createUser"	//일반 회원가입
+            "/api/user/createUser",	//일반 회원가입
+            "/api/user/searchId",	//이메일 찾기
+            "/api/user/renewPwd"	//비밀번호 찾기
     };
 
     //관리자(ADMIN)만 가능

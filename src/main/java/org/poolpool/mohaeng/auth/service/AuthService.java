@@ -33,6 +33,7 @@ public class AuthService {
 
         String email = auth.getName();
         String role = auth.getAuthorities().stream().findFirst().map(a -> a.getAuthority()).orElse("ROLE_USER");
+        System.out.println("role : " + role);
 
         //이메일로 회원 고유ID 찾기
     	UserEntity user = userRepository.findByEmail(email)

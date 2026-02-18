@@ -9,5 +9,12 @@ public interface UserService {
 	
 	//일반 회원가입(개인/업체)
 	int insertUser(UserDto user);
+
+	//이메일 찾기
+	UserDto findByNameAndPhone(String name, String phone);
+
+	//개인정보 조회
+	UserDto selectUser(String userId);
+	
 	
 }
