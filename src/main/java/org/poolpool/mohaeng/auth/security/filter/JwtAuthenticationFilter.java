@@ -29,6 +29,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
+        System.out.println("JWT FILTER URI = " + uri);
+//        String contextPath = request.getContextPath();
+//        uri = uri.substring(contextPath.length());
+//        System.out.println("CONTEXTPATH 제외 URI = " + uri);
+        
         String method = request.getMethod();
 
         // 0) CORS preflight
@@ -44,14 +49,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2) auth endpoints는 permitAll
         if (uri.startsWith("/auth/")) return true;
+        
+        // 소셜 계정 연동(OAuth2 인증)
+        if(uri.startsWith("/oauth2") || uri.startsWith("/login/oauth2")) return true;
 
-        // 3) permitAll API (GET) : 공지/게시글 조회/검색/다운로드
-        if (HttpMethod.GET.matches(method) && (uri.startsWith("/api/notices") || uri.startsWith("/api/boards"))) {
+        // 3) permitAll API (GET)
+        if (HttpMethod.GET.matches(method) && (uri.startsWith("/api/user") || uri.startsWith("/api/events"))) {
             return true;
         }
 
         // 4) 회원가입/아이디체크 permitAll
-        if (HttpMethod.POST.matches(method) && (uri.equals("/api/members") || uri.equals("/api/members/check-id"))) {
+        if (HttpMethod.POST.matches(method) && (uri.equals("/api/user/checkId") || uri.equals("/api/user/createUser"))) {
             return true;
         }
 

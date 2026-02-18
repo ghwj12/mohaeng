@@ -3,31 +3,35 @@ package org.poolpool.mohaeng.auth.security.authorization;
 public final class EndpointPolicy {
     private EndpointPolicy() {}
 
-    // 공개
+    //누구나 가능
     public static final String[] PUBLIC_GET = {
-            "/api/notices/**",
-            "/api/event/**"
+            "/api/events/**",
+            "/api/user/searchEmail",	//이메일 찾기
+            "/api/user/renewPwd",		//비밀번호 찾기
+            "/oauth2/**", "/login/oauth2/**",	//소셜 계정 연동
+            "/api/eventInquiry/list"	//문의 목록
     };
 
     public static final String[] PUBLIC_POST = {
-            "/api/user",
-            "/api/user/checkEmail"
+            "/api/user/checkId",	//이메일 중복 확인
+            "/api/user/createUser"	//일반 회원가입
     };
 
-    // 공지: ADMIN만 (POST/PUT/DELETE)
-    public static final String[] NOTICE_ADMIN = { "/api/notices/**" };
+    //관리자(ADMIN)만 가능
+    public static final String[] ADMIN_PAGE = { "/api/admin/**" };
 
-    // 게시글: USER/ADMIN (POST/PUT/DELETE)
-    public static final String[] BOARD_WRITE = { "/api/boards/**" };
-
-    // 댓글/대댓글: USER/ADMIN
-    public static final String[] REPLY_WRITE = {
-            "/api/boards/*/replies/**",
-            "/api/replies/**"
+    //회원(USER)만 가능
+    public static final String[] USER_PAGE = { 
+    		"/api/user/**", 
+    		"/api/wishlist/**"
     };
 
-    // 회원: 내정보 USER/ADMIN, 목록/검색 ADMIN
-    public static final String[] MEMBER_ME = { "/api/members/*", "/api/members/*/photo" };
-    public static final String[] MEMBER_ADMIN_LIST = { "/api/members", "/api/members/search" };
-    public static final String[] MEMBER_ADMIN_PATCH = { "/api/members/*/login-ok" };
+    // 회원(USER), 관리자(ADMIN) 가능
+    public static final String[] SERVICE_PAGE = {
+            "/api/eventParticipation/**",
+            "/api/eventInquiry/**",
+            "/api/reviews", "/api/reviews/**",
+            "/api/reports",
+            "/api/notifications", "/api/notifications/**" 
+    };
 }

@@ -3,9 +3,11 @@ package org.poolpool.mohaeng.auth.config;
 import org.poolpool.mohaeng.auth.security.authorization.EndpointPolicy;
 import org.poolpool.mohaeng.auth.security.filter.JwtAuthenticationFilter;
 import org.poolpool.mohaeng.auth.security.filter.JwtExceptionFilter;
+import org.poolpool.mohaeng.auth.security.handler.CustomAuthenticationSuccessHandler;
 import org.poolpool.mohaeng.auth.security.handler.CustomLogoutSuccessHandler;
 import org.poolpool.mohaeng.auth.security.handler.RestAccessDeniedHandler;
 import org.poolpool.mohaeng.auth.security.handler.RestAuthenticationEntryPoint;
+import org.poolpool.mohaeng.auth.service.CustomOAuth2UserService;
 import org.poolpool.mohaeng.auth.token.jwt.JwtProperties;
 import org.poolpool.mohaeng.auth.token.jwt.JwtTokenProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,13 +24,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
 @EnableConfigurationProperties(JwtProperties.class)
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-	/**
-     *  AuthenticationManager Bean 등록 (핵심!)
+    private final JwtTokenProvider jwt;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
+    /**
+     * AuthenticationManager Bean 등록 (핵심!)
      */
     @Bean
     public AuthenticationManager authenticationManager(
@@ -38,7 +47,7 @@ public class SecurityConfig {
     }
 
     /**
-     *  DaoAuthenticationProvider 등록
+     * DaoAuthenticationProvider 등록
      * - CustomUserDetailsService + PasswordEncoder 연결
      */
     @Bean
@@ -52,9 +61,24 @@ public class SecurityConfig {
         return provider;
     }
 
-	
+    /**
+     * JWT 필터 빈
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtTokenProvider jwt) throws Exception {
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwt);
+    }
+
+    @Bean
+    public JwtExceptionFilter jwtExceptionFilter() {
+        return new JwtExceptionFilter();
+    }
+
+    /**
+     * SecurityFilterChain
+     */
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
             .formLogin(form -> form.disable())
@@ -77,39 +101,38 @@ public class SecurityConfig {
                 // PUBLIC GET
                 .requestMatchers(HttpMethod.GET, EndpointPolicy.PUBLIC_GET).permitAll()
 
-                // signup/check-id
+                // PUBLIC POST
                 .requestMatchers(HttpMethod.POST, EndpointPolicy.PUBLIC_POST).permitAll()
 
-                // notices write: ADMIN only
-                .requestMatchers(HttpMethod.POST, EndpointPolicy.NOTICE_ADMIN).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, EndpointPolicy.NOTICE_ADMIN).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.NOTICE_ADMIN).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, EndpointPolicy.NOTICE_ADMIN).hasRole("ADMIN")
+                // ADMIN only
+                .requestMatchers(HttpMethod.POST, EndpointPolicy.ADMIN_PAGE).hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, EndpointPolicy.ADMIN_PAGE).hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.ADMIN_PAGE).hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, EndpointPolicy.ADMIN_PAGE).hasRole("ADMIN")
+                
+                // USER only
+                .requestMatchers(HttpMethod.POST, EndpointPolicy.USER_PAGE).hasRole("USER")
+                .requestMatchers(HttpMethod.PUT, EndpointPolicy.USER_PAGE).hasRole("USER")
+                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.USER_PAGE).hasRole("USER")
+                .requestMatchers(HttpMethod.PATCH, EndpointPolicy.USER_PAGE).hasRole("USER")
 
-                // boards write: USER or ADMIN
-                .requestMatchers(HttpMethod.POST, EndpointPolicy.BOARD_WRITE).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.PUT, EndpointPolicy.BOARD_WRITE).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.BOARD_WRITE).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.PATCH, EndpointPolicy.BOARD_WRITE).hasAnyRole("USER","ADMIN")
-
-                // replies write: USER or ADMIN
-                .requestMatchers(HttpMethod.POST, EndpointPolicy.REPLY_WRITE).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.PUT, EndpointPolicy.REPLY_WRITE).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.REPLY_WRITE).hasAnyRole("USER","ADMIN")
-
-                // members me: USER or ADMIN
-                .requestMatchers(HttpMethod.GET, EndpointPolicy.MEMBER_ME).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.PUT, EndpointPolicy.MEMBER_ME).hasAnyRole("USER","ADMIN")
-                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.MEMBER_ME).hasAnyRole("USER","ADMIN")
-
-                // members list/search: ADMIN only
-                .requestMatchers(HttpMethod.GET, EndpointPolicy.MEMBER_ADMIN_LIST).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, EndpointPolicy.MEMBER_ADMIN_PATCH).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, EndpointPolicy.MEMBER_ADMIN_PATCH).hasRole("ADMIN")
+                // USER or ADMIN
+                .requestMatchers(HttpMethod.POST, EndpointPolicy.SERVICE_PAGE).hasAnyRole("USER","ADMIN")
+                .requestMatchers(HttpMethod.PUT, EndpointPolicy.SERVICE_PAGE).hasAnyRole("USER","ADMIN")
+                .requestMatchers(HttpMethod.DELETE, EndpointPolicy.SERVICE_PAGE).hasAnyRole("USER","ADMIN")
+                .requestMatchers(HttpMethod.PATCH, EndpointPolicy.SERVICE_PAGE).hasAnyRole("USER","ADMIN")
 
                 .anyRequest().authenticated()
-            )            
-            
+            )
+
+            // 소셜 로그인
+            .oauth2Login(oauth -> oauth
+                .userInfoEndpoint(userInfo -> userInfo
+                    .oidcUserService(customOAuth2UserService)
+                )
+                .successHandler(customAuthenticationSuccessHandler)
+            )
+
             // 401/403 JSON 처리
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(new RestAuthenticationEntryPoint())
@@ -117,15 +140,15 @@ public class SecurityConfig {
             )
 
             // 필터 순서: ExceptionFilter → AuthenticationFilter → UsernamePasswordAuthenticationFilter
-            .addFilterBefore(new JwtExceptionFilter(), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new JwtAuthenticationFilter(jwt), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtExceptionFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
-            // /auth/logout은 컨트롤러 방식으로 처리해도 되고,
-            //    Spring Security logout으로 처리해도 됨 (둘 중 하나만 선택!)
+            // /auth/logout
             .logout(logout -> logout
                 .logoutUrl("/auth/logout")
-                .logoutSuccessHandler(new CustomLogoutSuccessHandler())       
+                .logoutSuccessHandler(new CustomLogoutSuccessHandler())
             );
+
         return http.build();
     }
 }

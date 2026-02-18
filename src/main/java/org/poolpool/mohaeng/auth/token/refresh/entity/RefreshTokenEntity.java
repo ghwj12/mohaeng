@@ -9,23 +9,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "tb_refresh_tokens")
+@Table(name = "REFRESH_TOKEN")
 public class RefreshTokenEntity {
 
     @Id
     @Column(length = 50, nullable = false)
     private String id;
 
-    @Column(name = "USERID", length = 50, nullable = false)
-    private String userId;
+    @Column(name = "USER_ID", length = 50, nullable = false)
+    private Long userId;
 
-    @Column(name = "token_value", length = 512, nullable = false, unique = true)
+    @Column(name = "TOKEN_VALUE", length = 512, nullable = false, unique = true)
     private String tokenValue;
 
-    @Column(name = "issued_at", nullable = false)
+    @Column(name = "ISSUED_AT", nullable = false)
     private LocalDateTime issuedAt;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(name = "EXPIRES_AT", nullable = false)
     private LocalDateTime expiresAt;
 
     @Column(nullable = false)

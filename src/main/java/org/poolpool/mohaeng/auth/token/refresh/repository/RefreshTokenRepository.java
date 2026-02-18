@@ -6,7 +6,7 @@ import org.poolpool.mohaeng.auth.token.refresh.entity.RefreshTokenEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, String> {
-    Optional<RefreshTokenEntity> findByUserId(String userId);
-    Optional<RefreshTokenEntity> findByUserIdAndTokenValue(String userId, String tokenValue);
-    void deleteByUserId(String userId);
+    Optional<RefreshTokenEntity> findByUserId(Long userId);
+    Optional<RefreshTokenEntity> findByUserIdAndTokenValue(Long userId, String tokenValue);
+    void deleteByUserId(Long userId);
 }
