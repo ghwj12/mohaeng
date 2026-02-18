@@ -4,7 +4,6 @@ import org.poolpool.mohaeng.auth.security.authorization.EndpointPolicy;
 import org.poolpool.mohaeng.auth.security.filter.JwtAuthenticationFilter;
 import org.poolpool.mohaeng.auth.security.filter.JwtExceptionFilter;
 import org.poolpool.mohaeng.auth.security.handler.CustomAuthenticationSuccessHandler;
-import org.poolpool.mohaeng.auth.security.handler.CustomLogoutSuccessHandler;
 import org.poolpool.mohaeng.auth.security.handler.RestAccessDeniedHandler;
 import org.poolpool.mohaeng.auth.security.handler.RestAuthenticationEntryPoint;
 import org.poolpool.mohaeng.auth.service.CustomOAuth2UserService;
@@ -19,6 +18,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -144,10 +144,12 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
             // /auth/logout
-            .logout(logout -> logout
-                .logoutUrl("/auth/logout")
-                .logoutSuccessHandler(new CustomLogoutSuccessHandler())
-            );
+//            .logout(logout -> logout
+//                .logoutUrl("/auth/logout")
+//                .logoutSuccessHandler(new CustomLogoutSuccessHandler())
+//            );
+        	.logout(AbstractHttpConfigurer::disable);
+        
 
         return http.build();
     }

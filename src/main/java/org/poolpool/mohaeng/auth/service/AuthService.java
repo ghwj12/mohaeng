@@ -48,4 +48,38 @@ public class AuthService {
 
         return new TokenResponse(access, refresh, jwtProperties.accessExp(), jwtProperties.refreshExp());
     }
+
+    public TokenResponse refresh(String refreshToken, boolean extendLogin) {
+        if (!jwtTokenProvider.validate(refreshToken) || jwtTokenProvider.isExpired(refreshToken)) {
+            throw new RuntimeException("refresh expired");
+        }
+
+        Long userId = Long.valueOf(jwtTokenProvider.getUserId(refreshToken));
+        String role = jwtTokenProvider.getRole(refreshToken);
+        
+        if (!refreshTokenService.matches(userId, refreshToken)) {
+            throw new RuntimeException("refresh not matched");
+        }
+
+        String newAccess = jwtTokenProvider.createAccessToken(userId, role);
+
+        String newRefresh = null;
+        if (extendLogin) {
+            newRefresh = jwtTokenProvider.createRefreshToken(userId, role);
+            LocalDateTime now = LocalDateTime.now();
+            refreshTokenService.upsert(userId, newRefresh, now, now.plusDays(1));
+        }
+
+        return new TokenResponse(newAccess, newRefresh, jwtProperties.accessExp(), jwtProperties.refreshExp());
+    }
+
+    public void logout(String accessToken) {
+    	if (accessToken == null || !accessToken.startsWith("Bearer ")) return;
+
+        String token = accessToken.substring("Bearer ".length()).trim();
+        if (!jwtTokenProvider.validate(token)) return;
+
+        Long userId = Long.valueOf(jwtTokenProvider.getUserId(token));
+        refreshTokenService.deleteByUserId(userId);
+    }
 }
