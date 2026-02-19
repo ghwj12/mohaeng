@@ -19,6 +19,9 @@ public interface UserService {
 
 	//개인정보 수정
 	void patchUser(UserDto user, boolean deletePhoto, MultipartFile photo);
+
+	//회원 탈퇴
+	void patchWithdrawal(UserDto user);
 	
 	
 }

@@ -2,11 +2,14 @@ package org.poolpool.mohaeng.user.service;
 
 import java.io.File;
 
+import org.poolpool.mohaeng.auth.token.refresh.repository.RefreshTokenRepository;
 import org.poolpool.mohaeng.common.config.UploadProperties;
 import org.poolpool.mohaeng.common.util.FileNameChange;
 import org.poolpool.mohaeng.user.dto.UserDto;
 import org.poolpool.mohaeng.user.entity.UserEntity;
+import org.poolpool.mohaeng.user.repository.SocialUserRepository;
 import org.poolpool.mohaeng.user.repository.UserRepository;
+import org.poolpool.mohaeng.user.type.UserStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +26,8 @@ public class UserServiceImpl implements UserService{
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final UploadProperties uploadProperties;
+	private final SocialUserRepository socialUserRepository;
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	//이메일 중복 확인
 	@Override
@@ -100,6 +105,26 @@ public class UserServiceImpl implements UserService{
 
 	    //전화번호 변경
 	    if (user.getPhone() != null) updateUser.setPhone(user.getPhone());
+		
+	}
+
+	//회원 탈퇴
+	@Override
+	@Transactional
+	public void patchWithdrawal(UserDto user) {
+		Long userId = user.getUserId();
+		
+		boolean socialYn = socialUserRepository.existsByUser_UserId(userId);
+		if(socialYn) socialUserRepository.deleteByUser_UserId(userId);
+		
+		UserEntity updateUser = userRepository.findById(userId)
+	            .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
+		
+		updateUser.setUserStatus(UserStatus.WITHDRAWAL);
+		updateUser.setWithReasonId(user.getWithReasonId());
+		updateUser.setWithdrawalReason(user.getWithdrawalReason());
+		
+		refreshTokenRepository.deleteByUserId(userId);
 		
 	}
 }

@@ -10,7 +10,11 @@ public interface SocialUserRepository extends JpaRepository<SocialUserEntity, Lo
     // 특정 소셜 계정 조회
     Optional<SocialUserEntity> findByProviderAndProviderId(String provider, String providerId);
 
-    // 한 유저가 가진 모든 소셜 계정 조회
-//    List<SocialUserEntity> findByUser(UserEntity user);
+    // 소셜 계정인지 확인
+    boolean existsByUser_UserId(Long userId);
+
+    // 소셜 계정 삭제
+	void deleteByUser_UserId(Long userId);
+
 }
 
