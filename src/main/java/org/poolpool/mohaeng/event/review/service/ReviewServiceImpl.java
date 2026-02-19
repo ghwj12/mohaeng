@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import org.poolpool.mohaeng.common.api.PageResponse;
-import org.poolpool.mohaeng.event.entity.EventEntity;
+import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.review.dto.EventReviewTabItemDto;
 import org.poolpool.mohaeng.event.review.dto.MyPageReviewItemDto;
 import org.poolpool.mohaeng.event.review.dto.ReviewCreateRequestDto;

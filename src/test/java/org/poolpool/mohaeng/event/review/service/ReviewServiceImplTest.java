@@ -4,12 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
-import org.poolpool.mohaeng.event.entity.EventEntity;
+import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.review.dto.ReviewCreateRequestDto;
 import org.poolpool.mohaeng.event.review.dto.ReviewEditRequestDto;
 import org.poolpool.mohaeng.event.review.repository.ReviewRepository;
-import org.poolpool.mohaeng.event.review.service.ReviewService;
-import org.poolpool.mohaeng.event.review.service.ReviewServiceImpl;
 import org.poolpool.mohaeng.user.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -18,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 
 // @Rollback(false)
@@ -44,7 +41,7 @@ class ReviewServiceImplTest {
   @Test
   void 리뷰작성_성공() {
     UserEntity u = new UserEntity();
-    u.setUserName("tester");
+    u.setName("tester");
     em.persist(u);
 
     EventEntity ev = new EventEntity();
@@ -68,7 +65,7 @@ class ReviewServiceImplTest {
   @Test
   void 같은이벤트_중복작성_막힘() {
     UserEntity u = new UserEntity();
-    u.setUserName("tester");
+    u.setName("tester");
     em.persist(u);
 
     EventEntity ev = new EventEntity();
@@ -92,11 +89,11 @@ class ReviewServiceImplTest {
   @Test
   void 다른사람리뷰_수정삭제_불가() {
     UserEntity writer = new UserEntity();
-    writer.setUserName("writer");
+    writer.setName("writer");
     em.persist(writer);
 
     UserEntity other = new UserEntity();
-    other.setUserName("other");
+    other.setName("other");
     em.persist(other);
 
     EventEntity ev = new EventEntity();
