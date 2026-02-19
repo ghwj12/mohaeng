@@ -45,6 +45,7 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.badRequest().body(ApiResponse.fail("Validation 실패", errors));
     }
+    
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleAny(Exception e) {
