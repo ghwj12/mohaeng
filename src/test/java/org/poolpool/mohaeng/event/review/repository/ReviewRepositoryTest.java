@@ -3,9 +3,8 @@ package org.poolpool.mohaeng.event.review.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.poolpool.mohaeng.event.entity.EventEntity;
+import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.review.entity.ReviewEntity;
-import org.poolpool.mohaeng.event.review.repository.ReviewRepository;
 import org.poolpool.mohaeng.user.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -38,7 +37,7 @@ class ReviewRepositoryTest {
   @Test
   void existsByUser_UserIdAndEvent_EventId_true() {
     UserEntity u = new UserEntity();
-    u.setUserName("tester");
+    u.setName("tester");
     em.persist(u);
 
     EventEntity ev = new EventEntity();
@@ -63,11 +62,11 @@ class ReviewRepositoryTest {
   @Test
   void findByEvent_EventIdAndUser_UserIdNotOrderByCreatedAtDesc_returns_other_users() {
     UserEntity me = new UserEntity();
-    me.setUserName("me");
+    me.setName("me");
     em.persist(me);
 
     UserEntity other = new UserEntity();
-    other.setUserName("other");
+    other.setName("other");
     em.persist(other);
 
     EventEntity ev = new EventEntity();
