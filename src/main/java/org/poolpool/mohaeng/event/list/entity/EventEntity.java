@@ -106,4 +106,9 @@ public class EventEntity {
     public void changeStatusToDeleted() {
         this.eventStatus = "DELETED";
     }
+    
+    public void updateCategoryAndRegion(EventCategoryEntity category, EventRegionEntity region) {
+        this.category = category;
+        this.region = region;
+    }
 }

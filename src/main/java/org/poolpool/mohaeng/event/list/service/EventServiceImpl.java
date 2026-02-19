@@ -1,8 +1,7 @@
 package org.poolpool.mohaeng.event.list.service;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
+import java.util.List; // Arrays는 삭제됨
 
 import org.poolpool.mohaeng.event.host.dto.HostBoothDto;
 import org.poolpool.mohaeng.event.host.dto.HostFacilityDto;
@@ -27,25 +26,19 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
 
-	private final EventRepository eventRepository;
+    private final EventRepository eventRepository;
     private final HostBoothRepository hostBoothRepository;
     private final HostFacilityRepository hostFacilityRepository;
 
     @Override
     @Transactional
     public EventDetailDto getEventDetail(Long eventId) {
-        // 1. 행사 정보 조회 (이때 영속성 컨텍스트가 파일 리스트를 가지고 있음)
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 행사입니다."));
 
-        // 조회수 증가 로직 (필요시 추가)
-        // event.incrementViews(); 
-
-        // 2. 부스 & 부대시설 리스트 가져오기
         List<HostBoothEntity> booths = hostBoothRepository.findByEventId(eventId);
         List<HostFacilityEntity> facilities = hostFacilityRepository.findByEventId(eventId);
 
-        // 3. EventDetailDto로 조립 (EventDto 내부에서 다중 파일 로직 처리됨)
         return EventDetailDto.builder()
                 .eventInfo(EventDto.fromEntity(event))
                 .booths(booths.stream().map(HostBoothDto::fromEntity).toList())
@@ -53,9 +46,6 @@ public class EventServiceImpl implements EventService {
                 .build();
     }
 
-    // =========================================================================
-    // 기존 검색 로직 (그대로 유지)
-    // =========================================================================
     @Override
     @Transactional(readOnly = true)
     public Page<EventDto> searchEvents(
@@ -63,22 +53,18 @@ public class EventServiceImpl implements EventService {
             Integer categoryId, List<String> topicIds, 
             boolean checkFree, boolean hideClosed, Pageable pageable) {
 
+        // DB 쿼리용 문자열 변환
+        String topicParam = (topicIds == null || topicIds.isEmpty()) ? null : String.join(",", topicIds);
+
         Page<EventEntity> eventPage = eventRepository.searchEvents(
                 regionId, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
-                LocalDate.now(), pageable
+                LocalDate.now(), topicParam, pageable
         );
 
-        return eventPage.map(entity -> {
-            if (!isMatched(entity.getTopicIds(), topicIds)) return null;
-            return EventDto.fromEntity(entity); 
-        });
+        return eventPage.map(EventDto::fromEntity);
     }
 
-    private boolean isMatched(String entityTopics, List<String> selectedTopics) {
-        if (selectedTopics == null || selectedTopics.isEmpty()) return true;
-        if (entityTopics == null) return false;
-        return selectedTopics.stream().anyMatch(Arrays.asList(entityTopics.split(","))::contains);
-    }
+    // 🗑️ isMatched 메서드는 DB 필터링으로 대체되었으므로 삭제했습니다.
     
     @Override
     @Transactional(readOnly = true)
