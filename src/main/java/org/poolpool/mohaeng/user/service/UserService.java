@@ -1,6 +1,7 @@
 package org.poolpool.mohaeng.user.service;
 
 import org.poolpool.mohaeng.user.dto.UserDto;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
 
@@ -14,7 +15,10 @@ public interface UserService {
 	UserDto findByNameAndPhone(String name, String phone);
 
 	//개인정보 조회
-	UserDto selectUser(String userId);
+	UserDto findById(String userId);
+
+	//개인정보 수정
+	void patchUser(UserDto user, boolean deletePhoto, MultipartFile photo);
 	
 	
 }
