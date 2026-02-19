@@ -1,5 +1,8 @@
 package org.poolpool.mohaeng.event.host.service;
 
-public interface EventHostService {
+import org.poolpool.mohaeng.event.host.dto.EventCreateDto;
 
+public interface EventHostService {
+    Long createEventWithDetails(EventCreateDto createDto);
+    void deleteEvent(Long eventId);
 }
