@@ -10,6 +10,7 @@ public class ParticipationBoothDto {
     private Long pctBoothId;
     private Long hostBoothId;
     private Long userId;
+    private Long eventId;
 
     private String homepageUrl;
     private String boothTitle;
@@ -37,6 +38,7 @@ public class ParticipationBoothDto {
         d.pctBoothId = e.getPctBoothId();
         d.hostBoothId = e.getHostBoothId();
         d.userId = e.getUserId();
+        d.eventId = e.getEventId();
         d.homepageUrl = e.getHomepageUrl();
         d.boothTitle = e.getBoothTitle();
         d.boothTopic = e.getBoothTopic();
@@ -59,6 +61,7 @@ public class ParticipationBoothDto {
         e.setPctBoothId(this.pctBoothId);
         e.setHostBoothId(this.hostBoothId);
         e.setUserId(this.userId);
+        e.setEventId(this.eventId);
         e.setHomepageUrl(this.homepageUrl);
         e.setBoothTitle(this.boothTitle);
         e.setBoothTopic(this.boothTopic);
@@ -80,6 +83,8 @@ public class ParticipationBoothDto {
     public void setHostBoothId(Long hostBoothId) { this.hostBoothId = hostBoothId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+    public Long getEventId() { return eventId; }
+    public void setEventId(Long eventId) { this.eventId = eventId; }
     public String getHomepageUrl() { return homepageUrl; }
     public void setHomepageUrl(String homepageUrl) { this.homepageUrl = homepageUrl; }
     public String getBoothTitle() { return boothTitle; }
