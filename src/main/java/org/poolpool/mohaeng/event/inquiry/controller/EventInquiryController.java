@@ -3,6 +3,7 @@ package org.poolpool.mohaeng.event.inquiry.controller;
 import lombok.RequiredArgsConstructor;
 import org.poolpool.mohaeng.event.inquiry.dto.EventInquiryDto;
 import org.poolpool.mohaeng.event.inquiry.service.EventInquiryService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,45 +15,74 @@ public class EventInquiryController {
 
     private final EventInquiryService service;
 
-    // 문의 목록
+ // ✅ 문의 목록 조회
+    // 예: /api/eventInquiry?eventId=1
     @GetMapping("/list")
-    public List<EventInquiryDto> getInquiryList(@RequestParam Long eventId) {
-        return service.getInquiryList(eventId);
+    public ResponseEntity<List<EventInquiryDto>> getInquiryList(
+    		@RequestParam("eventId") Long eventId) {
+
+        return ResponseEntity.ok(service.getInquiryList(eventId));
     }
 
-    // 문의 등록
+    // ✅ 문의 등록
     @PostMapping("/createInquiry")
-    public Long createInquiry(@RequestBody EventInquiryDto dto) {
-        return service.createInquiry(dto);
+    public ResponseEntity<?> createInquiry(
+            @RequestParam("eventId") Long eventId,
+            @RequestBody EventInquiryDto dto) {
+    	
+    	dto.setEventId(eventId);
+        return ResponseEntity.ok(service.createInquiry(dto));
     }
 
-    // 문의 수정
+    // ✅ 문의 수정
     @PutMapping("/updateInquiry")
-    public void updateInquiry(@RequestBody EventInquiryDto dto) {
+    public ResponseEntity<Void> updateInquiry(
+    		@RequestParam("inqId") Long inqId,
+            @RequestBody EventInquiryDto dto) {
+
+        dto.setInqId(inqId);
         service.updateInquiry(dto);
+        return ResponseEntity.ok().build();
     }
 
-    // 문의 삭제
+    // ✅ 문의 삭제
     @DeleteMapping("/deleteInquiry")
-    public void deleteInquiry(@RequestParam Long inqId) {
+    public ResponseEntity<Void> deleteInquiry(
+    		@RequestParam("inqId") Long inqId) {
+
         service.deleteInquiry(inqId);
+        return ResponseEntity.ok().build();
     }
 
-    // 답변 등록
+    // ✅ 답변 등록
     @PostMapping("/createReply")
-    public void createReply(@RequestBody EventInquiryDto dto) {
+    public ResponseEntity<Void> createReply(
+    		@RequestParam("inqId") Long inqId,
+            @RequestBody EventInquiryDto dto) {
+
+        dto.setInqId(inqId);
         service.createReply(dto);
+        return ResponseEntity.ok().build();
     }
 
-    // 답변 수정
+    // ✅ 답변 수정
     @PutMapping("/updateReply")
-    public void updateReply(@RequestBody EventInquiryDto dto) {
+    public ResponseEntity<Void> updateReply(
+    		@RequestParam("inqId") Long inqId,
+            @RequestBody EventInquiryDto dto) {
+
+        dto.setInqId(inqId);
         service.updateReply(dto);
+        return ResponseEntity.ok().build();
     }
 
-    // 답변 삭제
+    // ✅ 답변 삭제
     @DeleteMapping("/deleteReply")
-    public void deleteReply(@RequestParam Long inqId) {
+    public ResponseEntity<Void> deleteReply(
+    		@RequestParam("inqId") Long inqId) {
+
         service.deleteReply(inqId);
+        return ResponseEntity.ok().build();
     }
 }
+
