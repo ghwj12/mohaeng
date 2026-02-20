@@ -16,6 +16,7 @@ public interface EventService {
      * 리턴 타입은 설계도의 PageResponse 대신 스프링 기본 Page를 사용하여 DTO 생성을 최소화합니다.
      */
     Page<EventDto> searchEvents(
+    		String keyword,
             Long regionId,          // 1&2. 지역 필터
             LocalDate filterStart,  // 3. 시작 기간
             LocalDate filterEnd,    // 3. 종료 기간

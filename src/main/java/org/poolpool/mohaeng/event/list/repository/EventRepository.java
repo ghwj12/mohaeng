@@ -15,6 +15,7 @@ import org.springframework.data.repository.query.Param;
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     @Query("SELECT e FROM EventEntity e WHERE "
+    		+ "(:keyword IS NULL OR e.title LIKE CONCAT('%', :keyword, '%') OR e.simpleExplain LIKE CONCAT('%', :keyword, '%')) AND "
             + "(:regionId IS NULL OR e.region.regionId = :regionId OR e.region.parent.regionId = :regionId) AND "
             + "(:filterStart IS NULL OR e.endDate >= :filterStart) AND "
             + "(:filterEnd IS NULL OR e.startDate <= :filterEnd) AND "
@@ -23,6 +24,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             + "(:hideClosed = false OR e.endDate >= :today) AND "
             + "(:topicIds IS NULL OR e.topicIds LIKE CONCAT('%', :topicIds, '%'))") // SQL 문법에 맞게 수정
     Page<EventEntity> searchEvents(
+    		@Param("keyword") String keyword,
             @Param("regionId") Long regionId, 
             @Param("filterStart") LocalDate filterStart,
             @Param("filterEnd") LocalDate filterEnd, 
