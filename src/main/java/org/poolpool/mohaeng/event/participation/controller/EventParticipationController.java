@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/eventParticipation")
 public class EventParticipationController {
 
     private final EventParticipationService service;
@@ -21,8 +21,7 @@ public class EventParticipationController {
     // =========================
 
     // 참여 행사 목록 조회 (유저 기준)
-    // GET /api/users/{userId}/participations
-    @GetMapping("/users/{userId}/participations")
+    @GetMapping("/getParticipationList")
     public ResponseEntity<List<EventParticipationDto>> getParticipationList(
             @PathVariable Long userId) {
 
@@ -30,8 +29,7 @@ public class EventParticipationController {
     }
 
     // 행사 신청 임시 저장
-    // POST /api/events/{eventId}/participations/temp
-    @PostMapping("/events/{eventId}/participations/temp")
+    @PostMapping("/saveParticipationTemp")
     public ResponseEntity<Long> saveParticipationTemp(
             @PathVariable Long eventId,
             @RequestBody EventParticipationDto dto) {
@@ -41,8 +39,7 @@ public class EventParticipationController {
     }
 
     // 행사 신청 제출(최종)
-    // POST /api/events/{eventId}/participations
-    @PostMapping("/events/{eventId}/participations")
+    @PostMapping("/submitParticipation")
     public ResponseEntity<Long> submitParticipation(
             @PathVariable Long eventId,
             @RequestBody EventParticipationDto dto) {
@@ -53,7 +50,7 @@ public class EventParticipationController {
 
     // 참여 취소
     // DELETE /api/participations/{pctId}
-    @DeleteMapping("/participations/{pctId}")
+    @DeleteMapping("/cancelParticipation")
     public ResponseEntity<Void> cancelParticipation(
             @PathVariable Long pctId) {
 
@@ -68,7 +65,7 @@ public class EventParticipationController {
 
     // 유저 기준 부스 참여 목록 조회
     // GET /api/users/{userId}/booth-participations
-    @GetMapping("/users/{userId}/booth-participations")
+    @GetMapping("/getParticipationBoothList")
     public ResponseEntity<List<ParticipationBoothDto>> getParticipationBoothList(
             @PathVariable Long userId) {
 
@@ -77,7 +74,7 @@ public class EventParticipationController {
 
     // 행사 부스 신청 임시 저장
     // POST /api/events/{eventId}/booth-participations/temp
-    @PostMapping("/events/{eventId}/booth-participations/temp")
+    @PostMapping("/saveBoothApplyTemp")
     public ResponseEntity<Long> saveBoothApplyTemp(
             @PathVariable Long eventId,
             @RequestBody ParticipationBoothDto dto) {
@@ -88,7 +85,7 @@ public class EventParticipationController {
 
     // 행사 부스 신청 제출(최종)
     // POST /api/events/{eventId}/booth-participations
-    @PostMapping("/events/{eventId}/booth-participations")
+    @PostMapping("/submitBoothApply")
     public ResponseEntity<Long> submitBoothApply(
             @PathVariable Long eventId,
             @RequestBody ParticipationBoothDto dto) {
@@ -99,7 +96,7 @@ public class EventParticipationController {
 
     // 행사 부스 참여 취소
     // DELETE /api/booth-participations/{pctBoothId}
-    @DeleteMapping("/booth-participations/{pctBoothId}")
+    @DeleteMapping("/cancelBoothParticipation")
     public ResponseEntity<Void> cancelBoothParticipation(
             @PathVariable Long pctBoothId) {
 

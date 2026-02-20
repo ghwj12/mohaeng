@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/events/{eventId}/inquiries")
+@RequestMapping("/api/eventInquiry")
 public class EventInquiryController {
 
     private final EventInquiryService service;
@@ -33,7 +33,7 @@ public class EventInquiryController {
     }
 
     // 문의 수정
-    @PutMapping("/{inqId}")
+    @PutMapping("/updateInquiry")
     public ResponseEntity<Void> updateInquiry(
             @PathVariable Long inqId,
             @RequestBody EventInquiryDto dto) {
@@ -44,7 +44,7 @@ public class EventInquiryController {
     }
 
     // 문의 삭제
-    @DeleteMapping("/{inqId}")
+    @DeleteMapping("/deleteInquiry")
     public ResponseEntity<Void> deleteInquiry(
             @PathVariable Long inqId) {
 
@@ -53,7 +53,7 @@ public class EventInquiryController {
     }
 
     // 답변 등록 (관리자)
-    @PostMapping("/{inqId}/reply")
+    @PostMapping("/createReply")
     public ResponseEntity<Void> createReply(
             @PathVariable Long inqId,
             @RequestBody EventInquiryDto dto) {
@@ -64,7 +64,7 @@ public class EventInquiryController {
     }
 
     // 답변 수정
-    @PutMapping("/{inqId}/reply")
+    @PutMapping("/updateReply")
     public ResponseEntity<Void> updateReply(
             @PathVariable Long inqId,
             @RequestBody EventInquiryDto dto) {
@@ -75,7 +75,7 @@ public class EventInquiryController {
     }
 
     // 답변 삭제
-    @DeleteMapping("/{inqId}/reply")
+    @DeleteMapping("/deleteReply")
     public ResponseEntity<Void> deleteReply(
             @PathVariable Long inqId) {
 
