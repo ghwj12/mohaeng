@@ -1,6 +1,9 @@
 package org.poolpool.mohaeng.user.service;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.poolpool.mohaeng.auth.token.refresh.repository.RefreshTokenRepository;
 import org.poolpool.mohaeng.common.config.UploadProperties;
@@ -32,13 +35,30 @@ public class UserServiceImpl implements UserService{
 	//이메일 중복 확인
 	@Override
 	public int existsByEmail(String email) {
-		return userRepository.existsByEmail(email) == true ? 1 : 0;
+		
+		Optional<UserEntity> existUser = userRepository.findByEmail(email);
+		if (existUser != null) {
+			if(existUser.get().getUserStatus() != UserStatus.WITHDRAWAL) return 1;
+		}
+		return 0;
 	}
 
 	//일반 회원가입(개인/업체)
 	@Override
 	@Transactional
 	public int insertUser(UserDto user) {
+		String email = user.getEmail();
+		
+		// 탈퇴했던 회원일 경우 기존 데이터 업데이트를 위해 userId 조회 및 세팅
+		if(userRepository.existsByEmail(email)) {
+			Optional<UserEntity> existUser = userRepository.findByEmail(email);
+			if (!existUser.isEmpty()) {
+				user.setUserId(existUser.get().getUserId());
+				user.setCreatedAt(LocalDateTime.now());
+				user.setLastLoginAt(LocalDate.now());
+			}
+		}
+		
 		//사용자가 입력한 평문 비밀번호
 	    String rawPassword = user.getUserPwd();
 
