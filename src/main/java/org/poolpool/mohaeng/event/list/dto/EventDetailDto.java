@@ -12,6 +12,10 @@ public class EventDetailDto {
     // 1. 행사 메인 정보 (행사명, 날짜, 장소, 조회수 등)
     private EventDto eventInfo;
 
+    private String hostName;
+    private String hostEmail;
+    private String hostPhone;
+    
     // 2. 해당 행사의 부스 목록
     private List<HostBoothDto> booths;
 
