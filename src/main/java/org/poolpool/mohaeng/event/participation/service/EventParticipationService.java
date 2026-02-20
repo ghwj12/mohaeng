@@ -17,9 +17,9 @@ public interface EventParticipationService {
 
     List<ParticipationBoothDto> getParticipationBoothList(Long userId);
 
-    Long saveBoothApplyTemp(ParticipationBoothDto dto);
+    Long saveBoothApplyTemp(Long eventId, ParticipationBoothDto dto);
 
-    Long submitBoothApply(ParticipationBoothDto dto);
+    Long submitBoothApply(Long eventId, ParticipationBoothDto dto);
 
     void cancelBoothParticipation(Long pctBoothId);
 }

@@ -17,9 +17,6 @@ public class ParticipationBoothEntity {
 
     @Column(name = "USER_ID", nullable = false)
     private Long userId;
-    
-    @Column(name = "EVENT_ID", nullable = false)
-    private Long eventId;
 
     @Column(name = "HOMEPAGE_URL", length = 255)
     private String homepageUrl;
@@ -88,9 +85,6 @@ public class ParticipationBoothEntity {
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
-    
-    public Long getEventId() { return eventId; }
-    public void setEventId(Long eventId) { this.eventId = eventId; }
 
     public String getHomepageUrl() { return homepageUrl; }
     public void setHomepageUrl(String homepageUrl) { this.homepageUrl = homepageUrl; }

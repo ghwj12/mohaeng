@@ -15,27 +15,29 @@ public class EventInquiryController {
 
     private final EventInquiryService service;
 
-    // 문의 목록 조회
-    @GetMapping
+ // ✅ 문의 목록 조회
+    // 예: /api/eventInquiry?eventId=1
+    @GetMapping("/list")
     public ResponseEntity<List<EventInquiryDto>> getInquiryList(
-            @PathVariable Long eventId) {
+    		@RequestParam("eventId") Long eventId) {
+
         return ResponseEntity.ok(service.getInquiryList(eventId));
     }
 
-    // 문의 등록
-    @PostMapping
-    public ResponseEntity<Long> createInquiry(
-            @PathVariable Long eventId,
+    // ✅ 문의 등록
+    @PostMapping("/createInquiry")
+    public ResponseEntity<?> createInquiry(
+            @RequestParam("eventId") Long eventId,
             @RequestBody EventInquiryDto dto) {
-
-        dto.setEventId(eventId);
+    	
+    	dto.setEventId(eventId);
         return ResponseEntity.ok(service.createInquiry(dto));
     }
 
-    // 문의 수정
+    // ✅ 문의 수정
     @PutMapping("/updateInquiry")
     public ResponseEntity<Void> updateInquiry(
-            @PathVariable Long inqId,
+    		@RequestParam("inqId") Long inqId,
             @RequestBody EventInquiryDto dto) {
 
         dto.setInqId(inqId);
@@ -43,19 +45,19 @@ public class EventInquiryController {
         return ResponseEntity.ok().build();
     }
 
-    // 문의 삭제
+    // ✅ 문의 삭제
     @DeleteMapping("/deleteInquiry")
     public ResponseEntity<Void> deleteInquiry(
-            @PathVariable Long inqId) {
+    		@RequestParam("inqId") Long inqId) {
 
         service.deleteInquiry(inqId);
         return ResponseEntity.ok().build();
     }
 
-    // 답변 등록 (관리자)
+    // ✅ 답변 등록
     @PostMapping("/createReply")
     public ResponseEntity<Void> createReply(
-            @PathVariable Long inqId,
+    		@RequestParam("inqId") Long inqId,
             @RequestBody EventInquiryDto dto) {
 
         dto.setInqId(inqId);
@@ -63,10 +65,10 @@ public class EventInquiryController {
         return ResponseEntity.ok().build();
     }
 
-    // 답변 수정
+    // ✅ 답변 수정
     @PutMapping("/updateReply")
     public ResponseEntity<Void> updateReply(
-            @PathVariable Long inqId,
+    		@RequestParam("inqId") Long inqId,
             @RequestBody EventInquiryDto dto) {
 
         dto.setInqId(inqId);
@@ -74,10 +76,10 @@ public class EventInquiryController {
         return ResponseEntity.ok().build();
     }
 
-    // 답변 삭제
+    // ✅ 답변 삭제
     @DeleteMapping("/deleteReply")
     public ResponseEntity<Void> deleteReply(
-            @PathVariable Long inqId) {
+    		@RequestParam("inqId") Long inqId) {
 
         service.deleteReply(inqId);
         return ResponseEntity.ok().build();

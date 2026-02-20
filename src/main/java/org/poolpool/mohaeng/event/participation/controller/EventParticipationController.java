@@ -23,25 +23,15 @@ public class EventParticipationController {
     // 참여 행사 목록 조회 (유저 기준)
     @GetMapping("/getParticipationList")
     public ResponseEntity<List<EventParticipationDto>> getParticipationList(
-            @PathVariable Long userId) {
+    		@RequestParam("userId") Long userId) {
 
         return ResponseEntity.ok(service.getParticipationList(userId));
-    }
-
-    // 행사 신청 임시 저장
-    @PostMapping("/saveParticipationTemp")
-    public ResponseEntity<Long> saveParticipationTemp(
-            @PathVariable Long eventId,
-            @RequestBody EventParticipationDto dto) {
-
-        dto.setEventId(eventId);
-        return ResponseEntity.ok(service.saveParticipationTemp(dto));
     }
 
     // 행사 신청 제출(최종)
     @PostMapping("/submitParticipation")
     public ResponseEntity<Long> submitParticipation(
-            @PathVariable Long eventId,
+    		@RequestParam("eventId") Long eventId,
             @RequestBody EventParticipationDto dto) {
 
         dto.setEventId(eventId);
@@ -49,10 +39,9 @@ public class EventParticipationController {
     }
 
     // 참여 취소
-    // DELETE /api/participations/{pctId}
     @DeleteMapping("/cancelParticipation")
     public ResponseEntity<Void> cancelParticipation(
-            @PathVariable Long pctId) {
+    		@RequestParam("pctId") Long pctId) {
 
         service.cancelParticipation(pctId);
         return ResponseEntity.ok().build();
@@ -64,41 +53,26 @@ public class EventParticipationController {
     // =========================
 
     // 유저 기준 부스 참여 목록 조회
-    // GET /api/users/{userId}/booth-participations
     @GetMapping("/getParticipationBoothList")
     public ResponseEntity<List<ParticipationBoothDto>> getParticipationBoothList(
-            @PathVariable Long userId) {
+    		@RequestParam("userId") Long userId) {
 
         return ResponseEntity.ok(service.getParticipationBoothList(userId));
     }
 
-    // 행사 부스 신청 임시 저장
-    // POST /api/events/{eventId}/booth-participations/temp
-    @PostMapping("/saveBoothApplyTemp")
-    public ResponseEntity<Long> saveBoothApplyTemp(
-            @PathVariable Long eventId,
-            @RequestBody ParticipationBoothDto dto) {
-
-        dto.setEventId(eventId);
-        return ResponseEntity.ok(service.saveBoothApplyTemp(dto));
-    }
-
     // 행사 부스 신청 제출(최종)
-    // POST /api/events/{eventId}/booth-participations
     @PostMapping("/submitBoothApply")
     public ResponseEntity<Long> submitBoothApply(
-            @PathVariable Long eventId,
+    		@RequestParam("eventId") Long eventId,
             @RequestBody ParticipationBoothDto dto) {
 
-        dto.setEventId(eventId);
-        return ResponseEntity.ok(service.submitBoothApply(dto));
+        return ResponseEntity.ok(service.submitBoothApply(eventId, dto));
     }
 
     // 행사 부스 참여 취소
-    // DELETE /api/booth-participations/{pctBoothId}
     @DeleteMapping("/cancelBoothParticipation")
     public ResponseEntity<Void> cancelBoothParticipation(
-            @PathVariable Long pctBoothId) {
+    		@RequestParam("pctBoothId") Long pctBoothId) {
 
         service.cancelBoothParticipation(pctBoothId);
         return ResponseEntity.ok().build();
