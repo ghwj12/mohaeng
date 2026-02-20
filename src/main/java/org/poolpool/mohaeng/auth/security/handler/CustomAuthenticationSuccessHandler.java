@@ -11,6 +11,7 @@ import org.poolpool.mohaeng.user.entity.UserEntity;
 import org.poolpool.mohaeng.user.repository.UserRepository;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -41,7 +42,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
 		// 이메일로 회원 고유ID 찾기
 		UserEntity user = userRepository.findByEmail(email)
-				.orElseThrow(() -> new RuntimeException("해당 이메일의 회원이 없습니다."));
+				.orElseThrow(() -> new UsernameNotFoundException("해당 이메일의 회원이 없습니다. 이메일 : " + email));
 
 		Long userId = user.getUserId();
 
