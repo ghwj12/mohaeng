@@ -11,10 +11,8 @@ import org.poolpool.mohaeng.event.review.dto.MyPageReviewItemDto;
 import org.poolpool.mohaeng.event.review.dto.ReviewCreateRequestDto;
 import org.poolpool.mohaeng.event.review.dto.ReviewEditRequestDto;
 import org.poolpool.mohaeng.event.review.service.ReviewService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,14 +26,24 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
+    // ✅ URL 유지: /api/users/{userId}/reviews
+    // ✅ userId는 헤더로 통일
+    // ✅ path userId는 검증용으로만 사용 (불일치 시 403을 "직접" 반환 -> GlobalExceptionHandler에 의해 500으로 안 바뀜)
     @GetMapping("/users/{userId}/reviews")
     public ResponseEntity<ApiResponse<PageResponse<MyPageReviewItemDto>>> myList(
-            @RequestHeader(name = "userId") long userId,
+            @PathVariable("userId") long userIdFromPath,
+            @RequestHeader(name = "userId") long userIdFromHeader,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size
     ) {
+        if (userIdFromPath != userIdFromHeader) {
+            // ✅ 예외 던지지 말고 403 응답 직접 반환
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.fail("요청 userId가 일치하지 않습니다.", null));
+        }
+
         var pageable = PageRequest.of(page, size);
-        var data = reviewService.selectMyList(userId, pageable);
+        var data = reviewService.selectMyList(userIdFromHeader, pageable);
         return ResponseEntity.ok(ApiResponse.ok("내 리뷰 목록 조회 성공", data));
     }
 

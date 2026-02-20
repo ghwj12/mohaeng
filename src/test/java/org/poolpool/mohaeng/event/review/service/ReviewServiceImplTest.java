@@ -23,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest(properties = {
     "spring.datasource.url=jdbc:mysql://localhost:3306/mohaeng_test?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true",
     "spring.datasource.username=poolpool",          // ✅ 너 계정으로 변경
-    "spring.datasource.password=poolpool9900*",     // ✅ 너 비번으로 변경
+    "spring.datasource.password=...",     // ✅ 너 비번으로 변경
     "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver",
     "spring.jpa.hibernate.ddl-auto=create",
     "spring.jpa.show-sql=true"
