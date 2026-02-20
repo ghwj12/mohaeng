@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 
 @Service
@@ -76,12 +77,22 @@ public class ReviewServiceImpl implements ReviewService {
   public long create(long userId, ReviewCreateRequestDto request) {
     Long eventId = request.getEventId();
 
+    //  1) 존재 검증: user / event 실제 존재 확인
+    if (em.find(UserEntity.class, userId) == null) {
+      throw new EntityNotFoundException("존재하지 않는 사용자입니다.");
+    }
+    if (em.find(EventEntity.class, eventId) == null) {
+      throw new EntityNotFoundException("존재하지 않는 이벤트입니다.");
+    }
+
+    //  2) 중복 작성 방지
     if (reviewRepository.existsByUser_UserIdAndEvent_EventId(userId, eventId)) {
       throw new IllegalStateException("이미 해당 이벤트에 리뷰를 작성했습니다.");
     }
 
     ReviewEntity e = new ReviewEntity();
-    // ✅ getReference로 “id만 있는 프록시” 세팅 (DB 조회 안 하고 FK만 연결)
+
+    //  3) 검증 후에는 getReference로 FK만 연결(불필요한 조회 방지)
     e.setUser(em.getReference(UserEntity.class, userId));
     e.setEvent(em.getReference(EventEntity.class, eventId));
 
