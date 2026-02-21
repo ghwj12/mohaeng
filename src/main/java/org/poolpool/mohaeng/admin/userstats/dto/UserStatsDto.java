@@ -14,9 +14,12 @@ public class UserStatsDto {
 	private Long companyUserCount;	//기업 회원 수
 	private Long totalDormantCount;	//휴면계정 수
 	
-	//최근 6개월 월별 누적 회원 수 조회용
     private String period;	//기간
+    //최근 6개월 월별 누적 회원 수 조회용
     private Long userCount;	//회원 수
+    //최근 6개월 휴면계정 조치 동향 조회
+    private Long dormantNotifiedCount;	// 휴면 계정 안내 메일 전송 수
+    private Long dormantWithdrawnCount;	// 휴면 계정 탈퇴 처리 수
     
 	public UserStatsDto(String period, Long userCount) {
 		super();
@@ -30,6 +33,13 @@ public class UserStatsDto {
 		this.totalDormantCount = totalDormantCount;
 		this.personalUserCount = personalUserCount;
 		this.companyUserCount = companyUserCount;
+	}
+	
+	public UserStatsDto(String period, Long dormantNotifiedCount, Long dormantWithdrawnCount) {
+		super();
+		this.period = period;
+		this.dormantNotifiedCount = dormantNotifiedCount;
+		this.dormantWithdrawnCount = dormantWithdrawnCount;
 	}
     
 }

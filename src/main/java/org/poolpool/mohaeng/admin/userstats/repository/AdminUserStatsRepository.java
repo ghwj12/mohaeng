@@ -39,4 +39,33 @@ public interface AdminUserStatsRepository extends JpaRepository<UserEntity, Long
 		""")
 	List<UserStatsDto> findMonthlyUsers(@Param("startDate") LocalDateTime startDate);
 
+	//최근 6개월 휴면계정 조치 동향 조회 - 안내 메일 전송 수
+	@Query("""
+		select new org.poolpool.mohaeng.admin.userstats.dto.UserStatsDto(
+		    cast(function('date_format', d.notifiedAt, '%Y-%m') as string),
+		    count(d.dormantId),
+		    0L
+		)
+		from DormantUserEntity d
+		where d.notifiedAt is not null
+		  and d.notifiedAt >= :startDate
+		group by cast(function('date_format', d.notifiedAt, '%Y-%m') as string)
+		order by cast(function('date_format', d.notifiedAt, '%Y-%m') as string)
+		""")
+	List<UserStatsDto> findMonthlyDormantNotified(@Param("startDate") LocalDateTime startDate);
+	
+	//최근 6개월 휴면계정 조치 동향 조회 - 탈퇴 처리 수
+	@Query("""
+		select new org.poolpool.mohaeng.admin.userstats.dto.UserStatsDto(
+		    cast(function('date_format', d.withdrawnAt, '%Y-%m') as string),
+		    0L,
+		    count(d.dormantId)
+		)
+		from DormantUserEntity d
+		where d.withdrawnAt is not null
+		  and d.withdrawnAt >= :startDate
+		group by cast(function('date_format', d.withdrawnAt, '%Y-%m') as string)
+		order by cast(function('date_format', d.withdrawnAt, '%Y-%m') as string)
+		""")
+	List<UserStatsDto> findMonthlyDormantWithdrawn(@Param("startDate") LocalDateTime startDate);
 }

@@ -12,4 +12,7 @@ public interface AdminUserStatsService {
 	//최근 6개월 월별 회원 수 조회
 	List<UserStatsDto> findMonthlyUsers();
 	
+	//최근 6개월 휴면계정 조치 동향 조회
+	List<UserStatsDto> getDormantHandle();
+	
 }

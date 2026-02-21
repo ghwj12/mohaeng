@@ -62,5 +62,47 @@ public class AdminUserStatsServiceImpl implements AdminUserStatsService{
 	    return accMonthlyUsers;
 		
 	}
+
+	//최근 6개월 휴면 계정 조치 동향 조회
+	@Override
+	public List<UserStatsDto> getDormantHandle() {
+		LocalDate now = LocalDate.now();
+		
+		//6개월 전 월
+		LocalDateTime sixMonthsAgo = now.minusMonths(5).withDayOfMonth(1).atStartOfDay();
+		
+		//안내 메일 전송 수 조회
+		List<UserStatsDto> monthlyDormantNotified = adminUserStatsRepository.findMonthlyDormantNotified(sixMonthsAgo);
+		//탈퇴 처리 수 조회
+		List<UserStatsDto> monthlyDormantWithdrawn = adminUserStatsRepository.findMonthlyDormantWithdrawn(sixMonthsAgo);
+		
+		//조회 결과 Map으로 변환
+		Map<String, Long> notifiedMap =	monthlyDormantNotified.stream()
+	                    .collect(Collectors.toMap(
+	                            UserStatsDto::getPeriod,
+	                            UserStatsDto::getDormantNotifiedCount));
+
+	    Map<String, Long> withdrawnMap = monthlyDormantWithdrawn.stream()
+	                    .collect(Collectors.toMap(
+	                            UserStatsDto::getPeriod,
+	                            UserStatsDto::getDormantWithdrawnCount));
+		
+	    List<UserStatsDto> result = new ArrayList<>();
+
+	    //최근 6개월 강제 생성
+	    for (int i = 5; i >= 0; i--) {
+
+	        LocalDate target = now.minusMonths(i);
+	        String period = target.format(
+	                DateTimeFormatter.ofPattern("yyyy-MM"));
+
+	        Long notified = notifiedMap.getOrDefault(period, 0L);
+	        Long withdrawn = withdrawnMap.getOrDefault(period, 0L);
+	        
+	        result.add(new UserStatsDto(period, notified, withdrawn));
+	    }
+	    
+		return result;
+	}
 	
 }

@@ -31,14 +31,15 @@ public class AdminUserStatsController {
 		//최근 6개월 월별 누적 회원 수 조회
 		List<UserStatsDto> monthlyUsers = adminUserStatsService.findMonthlyUsers();
 		//최근 6개월 휴면계정 조치 동향 조회
+		List<UserStatsDto> monthlyDormantHandle = adminUserStatsService.getDormantHandle();
 		
 		Map<String, Object> map = new HashMap<>();
 
 		map.put("dashboardStats", dashboardStats);
 		map.put("monthlyUsers", monthlyUsers);
+		map.put("monthlyDormantHandle", monthlyDormantHandle);
         
         return ResponseEntity.ok(ApiResponse.ok("운영 통계 조회 완료", map));
     }
-	
 	
 }
