@@ -62,6 +62,8 @@ public class DormantUserDto {
         entity.setNotifiedAt(this.notifiedAt);
         entity.setWithdrawnAt(this.withdrawnAt);
         entity.setDormantStatus(this.dormantStatus);
+        entity.setCreatedAt(this.createdAt);
+        entity.setUpdatedAt(this.updatedAt);
 
         return entity;
     }
