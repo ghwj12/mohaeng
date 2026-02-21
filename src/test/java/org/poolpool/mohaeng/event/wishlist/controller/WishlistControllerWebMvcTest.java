@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.ResultHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WithMockUser(username = "1", roles = "USER") // ✅ Authentication.getName() == "1"
+@WithMockUser(username = "1", roles = "USER") //  Authentication.getName() == "1"
 @WebMvcTest(controllers = WishlistController.class)
 @AutoConfigureMockMvc(addFilters = true)
 @Import(WishlistControllerWebMvcTest.TestSecurityConfig.class)
