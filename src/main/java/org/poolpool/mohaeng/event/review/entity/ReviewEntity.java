@@ -20,7 +20,7 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(
-    name = "review",
+    name = "event_review",
     uniqueConstraints = @UniqueConstraint(
         name = "uk_review_user_event",
         columnNames = {"user_id", "event_id"}
