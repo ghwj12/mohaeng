@@ -74,8 +74,17 @@ public class EventParticipationServiceImpl implements EventParticipationService 
 
     @Override
     @Transactional
-    public Long saveBoothApplyTemp(ParticipationBoothDto dto) {
-        ParticipationBoothEntity booth = dto.toEntity();
+    public Long saveBoothApplyTemp(Long eventId, ParticipationBoothDto dto) {
+
+        // hostBoothId가 eventId 소속인지 검증 (repo 메서드 필요)
+        Long realEventId = repo.findEventIdByHostBoothId(dto.getHostBoothId())
+                .orElseThrow(() -> new IllegalArgumentException("HOST_BOOTH 없음"));
+
+        if (!realEventId.equals(eventId)) {
+            throw new IllegalArgumentException("hostBoothId가 eventId에 속하지 않습니다.");
+        }
+
+        ParticipationBoothEntity booth = dto.toEntity(); // ⚠️ 여기서 eventId set 있으면 제거해야 함(아직 남아있으면 계속 터짐)
         booth.setStatus("임시저장");
         ParticipationBoothEntity savedBooth = repo.saveBooth(booth);
 
@@ -85,7 +94,15 @@ public class EventParticipationServiceImpl implements EventParticipationService 
 
     @Override
     @Transactional
-    public Long submitBoothApply(ParticipationBoothDto dto) {
+    public Long submitBoothApply(Long eventId, ParticipationBoothDto dto) {
+
+        Long realEventId = repo.findEventIdByHostBoothId(dto.getHostBoothId())
+                .orElseThrow(() -> new IllegalArgumentException("HOST_BOOTH 없음"));
+
+        if (!realEventId.equals(eventId)) {
+            throw new IllegalArgumentException("hostBoothId가 eventId에 속하지 않습니다.");
+        }
+
         ParticipationBoothEntity booth = dto.toEntity();
         booth.setStatus("신청");
         ParticipationBoothEntity savedBooth = repo.saveBooth(booth);

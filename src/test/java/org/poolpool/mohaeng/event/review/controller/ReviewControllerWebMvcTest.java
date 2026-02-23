@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,10 +31,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultHandler;
 
 @WebMvcTest(controllers = ReviewController.class)
-@AutoConfigureMockMvc(addFilters = false) // 보안필터로 401/403 막히는 거 방지(컨트롤러 바인딩 테스트용)
-@Import(GlobalExceptionHandler.class)     // 헤더 누락/예외를 500으로 내려주는 전역 예외처리 적용
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 class ReviewControllerWebMvcTest {
 
     @Autowired
@@ -43,38 +45,58 @@ class ReviewControllerWebMvcTest {
     ReviewService reviewService;
 
     private static final String BASE = "/api";
-    private static final String USER_HEADER = "userId"; // 너가 지정한 유저 ID 헤더명
+    private static final String USER_HEADER = "userId";
+
+    private static ResultHandler printUtf8(String label) {
+        return result -> {
+            String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+            System.out.println("\n===== " + label + " RESPONSE (UTF-8) =====");
+            System.out.println(body);
+            System.out.println("========================================\n");
+        };
+    }
 
     @Test
     void myList_200() throws Exception {
-        var data = new PageResponse<MyPageReviewItemDto>(
-                List.of(), 0, 10, 0L, 0
-        );
-        given(reviewService.selectMyList(eq(1L), any(Pageable.class)))
-                .willReturn(data);
+        var data = new PageResponse<MyPageReviewItemDto>(List.of(), 0, 10, 0L, 0);
+        given(reviewService.selectMyList(eq(1L), any(Pageable.class))).willReturn(data);
 
         mockMvc.perform(get(BASE + "/users/{userId}/reviews", 1L)
-                .header(USER_HEADER, "1")
-                .param("page", "0")
-                .param("size", "10"))
+                        .header(USER_HEADER, "1")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andDo(printUtf8("myList_200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
         then(reviewService).should().selectMyList(eq(1L), any(Pageable.class));
     }
 
+    //  path userId != header userId -> 403 (이제 500으로 안 바뀜)
+    @Test
+    void myList_userIdMismatch_403() throws Exception {
+        mockMvc.perform(get(BASE + "/users/{userId}/reviews", 2L)
+                        .header(USER_HEADER, "1")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andDo(printUtf8("myList_userIdMismatch_403"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("요청 userId가 일치하지 않습니다."));
+
+        then(reviewService).shouldHaveNoInteractions();
+    }
+
     @Test
     void eventList_200() throws Exception {
-        var data = new PageResponse<EventReviewTabItemDto>(
-                List.of(), 0, 10, 0L, 0
-        );
-        given(reviewService.selectEventReviews(eq(1L), eq(10L), any(Pageable.class)))
-                .willReturn(data);
+        var data = new PageResponse<EventReviewTabItemDto>(List.of(), 0, 10, 0L, 0);
+        given(reviewService.selectEventReviews(eq(1L), eq(10L), any(Pageable.class))).willReturn(data);
 
         mockMvc.perform(get(BASE + "/events/{eventId}/reviews", 10L)
                         .header(USER_HEADER, "1")
                         .param("page", "0")
                         .param("size", "10"))
+                .andDo(printUtf8("eventList_200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
@@ -83,11 +105,11 @@ class ReviewControllerWebMvcTest {
 
     @Test
     void myReview_200() throws Exception {
-        given(reviewService.selectMyReviewForEvent(eq(1L), eq(10L)))
-                .willReturn(Optional.empty());
+        given(reviewService.selectMyReviewForEvent(eq(1L), eq(10L))).willReturn(Optional.empty());
 
         mockMvc.perform(get(BASE + "/events/{eventId}/reviews/my", 10L)
                         .header(USER_HEADER, "1"))
+                .andDo(printUtf8("myReview_200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
@@ -96,8 +118,7 @@ class ReviewControllerWebMvcTest {
 
     @Test
     void create_200() throws Exception {
-        given(reviewService.create(eq(1L), any(ReviewCreateRequestDto.class)))
-                .willReturn(100L);
+        given(reviewService.create(eq(1L), any(ReviewCreateRequestDto.class))).willReturn(100L);
 
         String body = """
                 {
@@ -111,8 +132,10 @@ class ReviewControllerWebMvcTest {
 
         mockMvc.perform(post(BASE + "/reviews")
                         .header(USER_HEADER, "1")
+                        .characterEncoding("UTF-8")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                .andDo(printUtf8("create_200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
@@ -121,8 +144,7 @@ class ReviewControllerWebMvcTest {
 
     @Test
     void update_200() throws Exception {
-        given(reviewService.edit(eq(1L), eq(100L), any(ReviewEditRequestDto.class)))
-                .willReturn(true);
+        given(reviewService.edit(eq(1L), eq(100L), any(ReviewEditRequestDto.class))).willReturn(true);
 
         String body = """
                 {
@@ -135,8 +157,10 @@ class ReviewControllerWebMvcTest {
 
         mockMvc.perform(put(BASE + "/reviews/{reviewId}", 100L)
                         .header(USER_HEADER, "1")
+                        .characterEncoding("UTF-8")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                .andDo(printUtf8("update_200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
@@ -145,21 +169,22 @@ class ReviewControllerWebMvcTest {
 
     @Test
     void delete_200() throws Exception {
-        given(reviewService.delete(eq(1L), eq(100L)))
-                .willReturn(true);
+        given(reviewService.delete(eq(1L), eq(100L))).willReturn(true);
 
         mockMvc.perform(delete(BASE + "/reviews/{reviewId}", 100L)
                         .header(USER_HEADER, "1"))
+                .andDo(printUtf8("delete_200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
         then(reviewService).should().delete(1L, 100L);
     }
 
-    // ✅ 너가 원한대로: 헤더 없으면 500 유지
+    //  헤더 누락 테스트: "실제 존재하는" 엔드포인트로 수정
     @Test
     void header_missing_500() throws Exception {
-        mockMvc.perform(get(BASE + "/events/10/me"))
+        mockMvc.perform(get(BASE + "/events/{eventId}/reviews/my", 10L))
+                .andDo(printUtf8("header_missing_500"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("서버 오류"));

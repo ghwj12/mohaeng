@@ -33,14 +33,24 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventDetailDto getEventDetail(Long eventId) {
+        // 1. 행사 조회
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 행사입니다."));
 
+        // 2. 조회수 1 증가 (자동 업데이트)
+        event.setViews(event.getViews() + 1);
+
+        // 3. 부스 및 부대시설 조회
         List<HostBoothEntity> booths = hostBoothRepository.findByEventId(eventId);
         List<HostFacilityEntity> facilities = hostFacilityRepository.findByEventId(eventId);
 
+        // 4. DTO 조립 및 반환
         return EventDetailDto.builder()
                 .eventInfo(EventDto.fromEntity(event))
+                // 주최자(User) 정보 매핑
+                .hostName(event.getHost() != null ? event.getHost().getName() : "정보 없음")
+                .hostEmail(event.getHost() != null ? event.getHost().getEmail() : "정보 없음")
+                .hostPhone(event.getHost() != null ? event.getHost().getPhone() : "정보 없음")
                 .booths(booths.stream().map(HostBoothDto::fromEntity).toList())
                 .facilities(facilities.stream().map(HostFacilityDto::fromEntity).toList())
                 .build();
@@ -49,7 +59,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public Page<EventDto> searchEvents(
-            Long regionId, LocalDate filterStart, LocalDate filterEnd, 
+    		String keyword, Long regionId, LocalDate filterStart, LocalDate filterEnd, 
             Integer categoryId, List<String> topicIds, 
             boolean checkFree, boolean hideClosed, Pageable pageable) {
 
@@ -57,7 +67,7 @@ public class EventServiceImpl implements EventService {
         String topicParam = (topicIds == null || topicIds.isEmpty()) ? null : String.join(",", topicIds);
 
         Page<EventEntity> eventPage = eventRepository.searchEvents(
-                regionId, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
+        		keyword, regionId, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
                 LocalDate.now(), topicParam, pageable
         );
 

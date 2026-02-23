@@ -29,7 +29,9 @@ public class EventController {
 	private final EventService eventService;
 
 	@GetMapping("/search")
-	public ResponseEntity<Page<EventDto>> searchEvents(@RequestParam(name = "regionId", required = false) Long regionId,
+	public ResponseEntity<Page<EventDto>> searchEvents(
+			@RequestParam(name = "keyword", required = false) String keyword,
+			@RequestParam(name = "regionId", required = false) Long regionId,
 			@RequestParam(name = "filterStart", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate filterStart,
 			@RequestParam(name = "filterEnd", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate filterEnd,
 			@RequestParam(name = "categoryId", required = false) Integer categoryId,
@@ -38,7 +40,7 @@ public class EventController {
 			@RequestParam(name = "hideClosed", defaultValue = "false") boolean hideClosed,
 			@PageableDefault(size = 10) Pageable pageable) {
 		// 서비스 인터페이스 규격에 맞춰 개별 인자로 전달
-		Page<EventDto> result = eventService.searchEvents(regionId, filterStart, filterEnd, categoryId, topicIds,
+		Page<EventDto> result = eventService.searchEvents(keyword, regionId, filterStart, filterEnd, categoryId, topicIds,
 				checkFree, hideClosed, pageable);
 
 		return ResponseEntity.ok(result);

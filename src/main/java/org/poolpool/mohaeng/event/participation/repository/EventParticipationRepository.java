@@ -83,6 +83,21 @@ public class EventParticipationRepository {
                 .setParameter("pctBoothId", pctBoothId)
                 .getResultList();
     }
+    
+     // =========================
+ 	 // HOST_BOOTH → EVENT 검증용
+ 	 // =========================
+ 	 public Optional<Long> findEventIdByHostBoothId(Long hostBoothId) {
+ 	     Object value = em.createNativeQuery(
+ 	             "SELECT EVENT_ID FROM HOST_BOOTH WHERE BOOTH_ID = ?"
+ 	     ).setParameter(1, hostBoothId)
+ 	      .getResultStream()
+ 	      .findFirst()
+ 	      .orElse(null);
+ 	
+ 	     if (value == null) return Optional.empty();
+ 	     return Optional.of(((Number) value).longValue());
+ 	 }
 
     public void deleteFacilitiesByPctBoothId(Long pctBoothId) {
         em.createQuery(
