@@ -29,11 +29,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         String password = user.getUserPwd();
 
-        // 탈퇴한 회원인지 확인
-        if (user.getUserStatus() == UserStatus.WITHDRAWAL) {
-            throw new UsernameNotFoundException("탈퇴된 계정입니다.");
-        }
-
         // 권한 설정
         String role = "ROLE_" + user.getUserRole().name();
 
