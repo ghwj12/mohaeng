@@ -10,6 +10,7 @@ import org.poolpool.mohaeng.auth.token.refresh.service.RefreshTokenService;
 import org.poolpool.mohaeng.user.entity.UserEntity;
 import org.poolpool.mohaeng.user.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class AuthService {
 
         //이메일로 회원 고유ID 찾기
     	UserEntity user = userRepository.findByEmail(email)
-    	        .orElseThrow(() -> new RuntimeException("해당 이메일의 회원이 없습니다."));
+    	        .orElseThrow(() -> new BadCredentialsException("아이디 또는 비밀번호가 올바르지 않습니다."));
     	
     	Long userId = user.getUserId();
     	
