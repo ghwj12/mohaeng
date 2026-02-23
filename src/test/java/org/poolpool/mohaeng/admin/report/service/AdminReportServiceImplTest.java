@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 @DataJpaTest(properties = {
     "spring.datasource.url=jdbc:mysql://localhost:3306/mohaeng_test?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true",
     "spring.datasource.username=poolpool",
-    "spring.datasource.password=poolpool9900*", // ✅ 너 비번
+    "spring.datasource.password=...", // ✅ 너 비번
     "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver",
     "spring.jpa.hibernate.ddl-auto=create",
     "spring.jpa.show-sql=true"
