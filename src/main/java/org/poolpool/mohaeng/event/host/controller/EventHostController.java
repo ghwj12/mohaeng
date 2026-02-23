@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.poolpool.mohaeng.event.host.dto.EventCreateDto;
 import org.poolpool.mohaeng.event.host.service.EventHostService;
-import org.poolpool.mohaeng.user.entity.UserEntity; // 본인의 User 엔티티나 Details 클래스 임포트
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // 💡 중요!
@@ -28,18 +27,20 @@ public class EventHostController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Long> createEvent(
             @RequestPart("eventData") EventCreateDto createDto,
-            // 💡 @AuthenticationPrincipal를 통해 토큰에 담긴 유저 정보를 가져옵니다.
-            @AuthenticationPrincipal Object userDetails, 
+            // 💡 CustomUserPrincipal 대신 String으로 직접 받습니다!
+            // 현재 필터가 String(userId)을 넣어주고 있기 때문에 이렇게 하면 null이 안 나옵니다.
+            @AuthenticationPrincipal String userId, 
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
             @RequestPart(value = "detailFiles", required = false) List<MultipartFile> detailFiles,
             @RequestPart(value = "boothFiles", required = false) List<MultipartFile> boothFiles
     ) {
-        // 💡 1. userDetails에서 ID 추출 (본인 프로젝트의 메서드에 맞게 수정하세요)
-        // 예: ((CustomUserDetails)userDetails).getUserId();
-        // 일단 테스트를 위해 11L을 직접 넣거나, 형변환 로직을 넣으시면 됩니다.
-        Long hostId = 11L; 
+        // 💡 이미 userId가 "1" 같은 문자열로 들어왔으니 바로 Long으로 변환만 하면 됩니다.
+        if (userId == null) {
+            throw new RuntimeException("로그인 정보가 없습니다. (토큰 확인 필요)");
+        }
         
-        // 💡 2. 서비스 호출 시 hostId를 꼭 같이 넘겨줍니다!
+        Long hostId = Long.parseLong(userId); 
+        
         Long newEventId = eventHostService.createEventWithDetails(createDto, hostId, thumbnail, detailFiles, boothFiles);
         
         return ResponseEntity.ok(newEventId);
