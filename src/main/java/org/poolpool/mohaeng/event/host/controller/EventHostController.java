@@ -31,7 +31,7 @@ public class EventHostController {
      */
     @PostMapping
     public ResponseEntity<Long> createEvent(
-            @RequestPart("eventData") String eventDataJson, // 이제 완벽하게 Param으로 받습니다.
+            @RequestPart("eventData") String eventDataJson,
             @RequestParam(value = "thumbnail", required = false) MultipartFile thumbnail,
             @RequestParam(value = "detailFiles", required = false) List<MultipartFile> detailFiles,
             @RequestParam(value = "boothFiles", required = false) List<MultipartFile> boothFiles
