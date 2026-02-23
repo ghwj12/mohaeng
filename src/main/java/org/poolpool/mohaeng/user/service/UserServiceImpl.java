@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.poolpool.mohaeng.auth.token.refresh.repository.RefreshTokenRepository;
 import org.poolpool.mohaeng.common.config.UploadProperties;
+import org.poolpool.mohaeng.common.service.MailService;
 import org.poolpool.mohaeng.common.util.FileNameChange;
 import org.poolpool.mohaeng.user.dto.UserDto;
 import org.poolpool.mohaeng.user.entity.UserEntity;
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService{
 	private final UploadProperties uploadProperties;
 	private final SocialUserRepository socialUserRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final MailService mailService;
 
 	//이메일 중복 확인
 	@Override
@@ -77,6 +79,57 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public UserDto findByNameAndPhone(String name, String phone) {
 		return UserDto.fromEntity(userRepository.findByNameAndPhone(name, phone));
+	}
+	
+	//비밀번호 찾기
+	@Override
+	public UserDto findByEmailAndPhone(String email, String phone) {
+		return UserDto.fromEntity(userRepository.findByEmailAndPhone(email, phone));
+	}
+	
+	//비밀번호 재설정 안내 메일 전송
+	@Override
+	public void sendRenewPwd(String email, String renewPwd) {
+		String subject = "[모행] 비밀번호 재설정 안내";
+
+        String content = """
+                <div style="font-family: Arial; line-height:1.6;">
+                <p>안녕하세요, <b>모행</b> 입니다.</p>
+
+                <p>
+                회원님의 요청에 따라 비밀번호 재설정을 위한 안내 메일을 보내드립니다.<br>
+                회원님의 비밀번호가 아래와 같이 변경되었습니다.
+                </p>
+
+                <p style="font-size:18px;">
+                <b>[%s]</b>
+                </p>
+
+                <p>
+                로그인 후 반드시 비밀번호를 재설정하시길 바랍니다.
+                </p>
+
+                <br>
+                <p style="font-size:12px; color:gray;">
+                본 메일은 발신 전용으로, 회신이 불가한 점 양해 부탁드립니다.
+                </p>
+
+                <p>감사합니다.<br>모행 드림</p>
+            </div>
+            """.formatted(renewPwd);
+
+        mailService.sendMail(email, subject, content);
+		
+	}
+	
+	//랜덤 비밀번호 업데이트
+	@Override
+	@Transactional
+	public void updateRenewPwd(Long userId, String email, String renewPwd) {
+		//BCrypt로 암호화
+	    String encodedPassword = passwordEncoder.encode(renewPwd);
+		
+		userRepository.updateRenewPwd(userId, email, encodedPassword, LocalDateTime.now());
 	}
 
 	//개인정보 조회

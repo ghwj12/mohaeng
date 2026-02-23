@@ -72,7 +72,7 @@ class ReviewControllerWebMvcTest {
         then(reviewService).should().selectMyList(eq(1L), any(Pageable.class));
     }
 
-    // ✅ path userId != header userId -> 403 (이제 500으로 안 바뀜)
+    //  path userId != header userId -> 403 (이제 500으로 안 바뀜)
     @Test
     void myList_userIdMismatch_403() throws Exception {
         mockMvc.perform(get(BASE + "/users/{userId}/reviews", 2L)
@@ -180,7 +180,7 @@ class ReviewControllerWebMvcTest {
         then(reviewService).should().delete(1L, 100L);
     }
 
-    // ✅ 헤더 누락 테스트: "실제 존재하는" 엔드포인트로 수정
+    //  헤더 누락 테스트: "실제 존재하는" 엔드포인트로 수정
     @Test
     void header_missing_500() throws Exception {
         mockMvc.perform(get(BASE + "/events/{eventId}/reviews/my", 10L))

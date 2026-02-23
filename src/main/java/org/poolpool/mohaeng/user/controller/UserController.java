@@ -1,5 +1,7 @@
 package org.poolpool.mohaeng.user.controller;
 
+import java.util.UUID;
+
 import org.poolpool.mohaeng.auth.dto.request.LoginRequest;
 import org.poolpool.mohaeng.common.api.ApiResponse;
 import org.poolpool.mohaeng.user.dto.UserDto;
@@ -64,6 +66,28 @@ public class UserController {
         	return ResponseEntity.status(404).body(ApiResponse.fail("Withdrawal User", "탈퇴된 계정입니다."));
         }
         return ResponseEntity.ok(ApiResponse.ok("이메일 찾기 성공!", user.getEmail()));
+	}
+	
+	//비밀번호 찾기
+	@PostMapping("/renewPwd")
+    public ResponseEntity<ApiResponse<String>> sendNewPwd(@RequestBody LoginRequest req) {
+		UserDto user = userService.findByEmailAndPhone(req.userId(), req.phone());
+		if (user == null) {
+            return ResponseEntity.status(404).body(ApiResponse.fail("회원 정보를 찾을 수 없습니다.", null));
+        } else if(user.getSignupType() == SignupType.GOOGLE) {
+        	return ResponseEntity.status(404).body(ApiResponse.fail("Social User", "구글 계정과 연동하여 가입되어 있습니다."));
+        } else if(user.getUserStatus() == UserStatus.WITHDRAWAL) {
+        	return ResponseEntity.status(404).body(ApiResponse.fail("Withdrawal User", "탈퇴된 계정입니다."));
+        } else {
+        	//랜덤 비밀번호 생성
+        	String randomPwd = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        	//비밀번호 재설정 안내 메일 전송
+        	userService.sendRenewPwd(req.userId(), randomPwd);
+        	//DB 업데이트
+        	userService.updateRenewPwd(user.getUserId(), req.userId(), randomPwd);
+        }
+		
+		return ResponseEntity.ok(ApiResponse.ok("비밀번호 재설정 안내 메일을 보냈습니다. 이메일을 확인해주세요.", null));
 	}
 	
 	//개인정보 조회
