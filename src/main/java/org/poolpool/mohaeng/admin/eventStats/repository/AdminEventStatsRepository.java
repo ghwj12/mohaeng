@@ -13,8 +13,7 @@ import java.util.List;
 @Repository
 public interface AdminEventStatsRepository extends JpaRepository<EventEntity, Long> {
 
-    // 1. 전체 행사 분석 (필터링 적용)
-    // QueryDSL 대신 @Query 내부에서 IS NULL 과 OR 조건을 활용해 동적 쿼리를 구현합니다.
+    // 1. 전체 행사 분석 (기존 유지)
     @Query("SELECT new org.poolpool.mohaeng.admin.eventStats.dto.AdminEventStatsDto$EventListResponse(" +
            "e.eventId, e.title, c.categoryName, e.lotNumberAdr, e.eventStatus, e.startDate, e.endDate, e.views) " +
            "FROM EventEntity e LEFT JOIN e.category c " +
@@ -32,8 +31,7 @@ public interface AdminEventStatsRepository extends JpaRepository<EventEntity, Lo
             @Param("status") String status
     );
 
-    // 2. 월별 행사 수 조회 (선택한 연도 기준)
-    // MONTH()와 YEAR() 함수를 사용하여 집계합니다.
+    // 2. 월별 행사 수 조회 (기존 유지)
     @Query("SELECT new org.poolpool.mohaeng.admin.eventStats.dto.AdminEventStatsDto$MonthlyStatsResponse(" +
            "MONTH(e.startDate), COUNT(e)) " +
            "FROM EventEntity e " +
@@ -42,33 +40,39 @@ public interface AdminEventStatsRepository extends JpaRepository<EventEntity, Lo
            "ORDER BY MONTH(e.startDate) ASC")
     List<AdminEventStatsDto.MonthlyStatsResponse> countByMonth(@Param("year") int year);
 
-    // 3. 카테고리 행사 수 조회 (진행중인 행사)
+    // 3. 카테고리 행사 수 조회
+    // 💡 수정: 'ONGOING'을 실제 DB 값인 '행사중'으로 변경
     @Query("SELECT new org.poolpool.mohaeng.admin.eventStats.dto.AdminEventStatsDto$CategoryStatsResponse(" +
            "c.categoryName, COUNT(e)) " +
            "FROM EventEntity e LEFT JOIN e.category c " +
-           "WHERE e.eventStatus = 'ONGOING' " +
+           "WHERE e.eventStatus = '행사중' " +
            "GROUP BY c.categoryName")
     List<AdminEventStatsDto.CategoryStatsResponse> countByCategory();
     
-    // --- [단일 행사 분석용 쿼리 추가] ---
+    // --- [단일 행사 분석용 쿼리] ---
 
-    // 1. 특정 행사의 결제 완료된 참여자 수 조회
-    @Query("SELECT COUNT(p) FROM EventParticipationEntity p WHERE p.eventId = :eventId AND p.pctStatus = '참여확정(결제완료)'")
+    // 1. 특정 행사의 참여자 수 조회
+    // 💡 수정: 서비스에서 사용하는 '결제대기' 또는 실제 완료 상태인 '결제완료'로 매칭
+    // (보통 통계는 결제가 완료된 사람만 세는 것이 좋으므로 '결제완료'를 추천합니다.)
+    @Query("SELECT COUNT(p) FROM EventParticipationEntity p WHERE p.eventId = :eventId AND p.pctStatus = '결제완료'")
     long countParticipantsByEventId(@Param("eventId") Long eventId);
 
-    // 2. 특정 행사의 리뷰 수 조회
+    // 2. 리뷰 수 조회 (기존 유지)
     @Query("SELECT COUNT(r) FROM ReviewEntity r WHERE r.event.eventId = :eventId")
     long countReviewsByEventId(@Param("eventId") Long eventId);
 
-    // 3. 특정 행사의 관심(찜) 수 조회
+    // 3. 관심(찜) 수 조회 (기존 유지)
     @Query("SELECT COUNT(w) FROM EventWishlistEntity w WHERE w.eventId = :eventId")
     long countWishlistByEventId(@Param("eventId") Long eventId);
 
-    // 4. 참여자 성별 통계 (남/여 카운트)
-    @Query("SELECT p.pctGender, COUNT(p) FROM EventParticipationEntity p WHERE p.eventId = :eventId AND p.pctStatus = '참여확정(결제완료)' GROUP BY p.pctGender")
+    // 4. 참여자 성별 통계
+    // 💡 수정: pctStatus 조건을 '결제완료'로 통일
+    @Query("SELECT p.pctGender, COUNT(p) FROM EventParticipationEntity p WHERE p.eventId = :eventId AND p.pctStatus = '결제완료' GROUP BY p.pctGender")
     List<Object[]> countGenderByEventId(@Param("eventId") Long eventId);
 
-    // 5. 🛠️ 부스 수익 합산 (에러 수정 완료: hb.boothId 사용)
+    // 5. 부스 수익 합산
+    // 💡 수정: 서비스에서 부스 신청 시 '신청'으로 들어가므로, 결제 로직이 따로 있다면 '결제완료'를 유지하고,
+    // 아니면 '신청' 상태를 합산하도록 변경해야 합니다. 여기서는 통계이므로 '결제완료'를 유지합니다.
     @Query("SELECT SUM(pb.totalPrice) FROM ParticipationBoothEntity pb WHERE pb.status = '결제완료' AND pb.hostBoothId IN (SELECT hb.boothId FROM HostBoothEntity hb WHERE hb.eventId = :eventId)")
     Long sumBoothRevenueByEventId(@Param("eventId") Long eventId);
 }
