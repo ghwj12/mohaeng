@@ -47,8 +47,19 @@ public class EventHostController {
     }
     
     @PutMapping("/{eventId}")
-    public ResponseEntity<String> deleteEvent(@PathVariable("eventId") Long eventId) {
-        eventHostService.deleteEvent(eventId);
-        return ResponseEntity.ok("행사 상태가 DELETED로 성공적으로 변경되었습니다.");
+    public ResponseEntity<String> deleteEvent(
+            @PathVariable("eventId") Long eventId,
+            @AuthenticationPrincipal String userId // 💡 토큰에서 추출한 ID
+    ) {
+        if (userId == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        
+        Long currentUserId = Long.parseLong(userId);
+        
+        // 서비스 호출 시 현재 유저 ID를 같이 넘깁니다.
+        eventHostService.deleteEvent(eventId, currentUserId);
+        
+        return ResponseEntity.ok("행사가 성공적으로 삭제(상태 변경)되었습니다.");
     }
 }

@@ -180,9 +180,20 @@ public class EventHostServiceImpl implements EventHostService {
     
     @Override
     @Transactional
-    public void deleteEvent(Long eventId) {
+    public void deleteEvent(Long eventId, Long currentUserId) {
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("해당 행사를 찾을 수 없습니다."));
+
+        // 💡 보안 1단계: 소유자(Host) 검증
+        // 행사에 저장된 host의 ID와 현재 로그인한 유저의 ID를 비교합니다.
+        if (!event.getHost().getUserId().equals(currentUserId)) {
+            throw new RuntimeException("본인이 생성한 행사만 삭제할 수 있습니다.");
+        }
+
+        // 💡 보안 2단계: 행사 상태 검증
+        if (!"행사종료".equals(event.getEventStatus())) {
+            throw new RuntimeException("진행 중이거나 예정된 행사는 삭제할 수 없습니다. 종료 후 시도해주세요.");
+        }
 
         event.changeStatusToDeleted();
     }

@@ -7,5 +7,5 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface EventHostService {
 	Long createEventWithDetails(EventCreateDto createDto, Long hostId, MultipartFile thumbnail, List<MultipartFile> detailFiles, List<MultipartFile> boothFiles);
-    void deleteEvent(Long eventId);
+	void deleteEvent(Long eventId, Long currentUserId);
 }
