@@ -21,6 +21,8 @@ import org.poolpool.mohaeng.event.list.entity.FileEntity;
 import org.poolpool.mohaeng.event.list.repository.EventCategoryRepository;
 import org.poolpool.mohaeng.event.list.repository.EventRegionRepository;
 import org.poolpool.mohaeng.event.list.repository.EventRepository;
+import org.poolpool.mohaeng.user.entity.UserEntity;
+import org.poolpool.mohaeng.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,15 +44,23 @@ public class EventHostServiceImpl implements EventHostService {
     
     // 💡 파일 저장 경로를 가져오기 위한 설정
     private final UploadProperties uploadProperties;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
-    public Long createEventWithDetails(EventCreateDto createDto, MultipartFile thumbnail, 
-                                       List<MultipartFile> detailFiles, List<MultipartFile> boothFiles) {
+    public Long createEventWithDetails(EventCreateDto createDto, Long hostId, // 2. hostId 추가
+            MultipartFile thumbnail, 
+            List<MultipartFile> detailFiles, 
+            List<MultipartFile> boothFiles) {
         
         // 1. DTO로부터 엔티티 생성
         EventDto eventDto = createDto.getEventInfo();
         EventEntity eventEntity = eventDto.toEntity();
+        
+        // 11번 유저(Host)를 찾아서 행사 엔티티에 연결!
+        UserEntity host = userRepository.findById(hostId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+        eventEntity.setHost(host);
 
         // 2. [에러 방지] DB에 실제 존재하는 카테고리와 지역 정보 연결
         if (eventDto.getCategory() != null) {
@@ -170,9 +180,20 @@ public class EventHostServiceImpl implements EventHostService {
     
     @Override
     @Transactional
-    public void deleteEvent(Long eventId) {
+    public void deleteEvent(Long eventId, Long currentUserId) {
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("해당 행사를 찾을 수 없습니다."));
+
+        // 💡 보안 1단계: 소유자(Host) 검증
+        // 행사에 저장된 host의 ID와 현재 로그인한 유저의 ID를 비교합니다.
+        if (!event.getHost().getUserId().equals(currentUserId)) {
+            throw new RuntimeException("본인이 생성한 행사만 삭제할 수 있습니다.");
+        }
+
+        // 💡 보안 2단계: 행사 상태 검증
+        if (!"행사종료".equals(event.getEventStatus())) {
+            throw new RuntimeException("진행 중이거나 예정된 행사는 삭제할 수 없습니다. 종료 후 시도해주세요.");
+        }
 
         event.changeStatusToDeleted();
     }

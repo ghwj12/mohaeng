@@ -1,7 +1,8 @@
 package org.poolpool.mohaeng.event.list.service;
 
 import java.time.LocalDate;
-import java.util.List; // Arrays는 삭제됨
+import java.util.ArrayList;
+import java.util.List;
 
 import org.poolpool.mohaeng.event.host.dto.HostBoothDto;
 import org.poolpool.mohaeng.event.host.dto.HostFacilityDto;
@@ -14,6 +15,7 @@ import org.poolpool.mohaeng.event.list.dto.EventDetailDto;
 import org.poolpool.mohaeng.event.list.dto.EventDto;
 import org.poolpool.mohaeng.event.list.dto.EventRegionCountDto;
 import org.poolpool.mohaeng.event.list.entity.EventEntity;
+import org.poolpool.mohaeng.event.list.entity.FileEntity;
 import org.poolpool.mohaeng.event.list.repository.EventRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,21 +35,34 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventDetailDto getEventDetail(Long eventId) {
-        // 1. 행사 조회
+        // 기존 코드와 완전히 동일합니다.
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 행사입니다."));
 
-        // 2. 조회수 1 증가 (자동 업데이트)
         event.setViews(event.getViews() + 1);
+        EventDto eventDto = EventDto.fromEntity(event);
 
-        // 3. 부스 및 부대시설 조회
+        List<String> detailImages = new ArrayList<>();
+        List<String> boothImages = new ArrayList<>();
+
+        if (event.getEventFiles() != null) {
+            for (FileEntity file : event.getEventFiles()) {
+                if ("EVENT".equals(file.getFileType())) {
+                    detailImages.add(file.getRenameFileName());
+                } else if ("HBOOTH".equals(file.getFileType())) {
+                    boothImages.add(file.getRenameFileName());
+                }
+            }
+        }
+
+        eventDto.setDetailImagePaths(detailImages);
+        eventDto.setBoothFilePaths(boothImages);
+
         List<HostBoothEntity> booths = hostBoothRepository.findByEventId(eventId);
         List<HostFacilityEntity> facilities = hostFacilityRepository.findByEventId(eventId);
 
-        // 4. DTO 조립 및 반환
         return EventDetailDto.builder()
-                .eventInfo(EventDto.fromEntity(event))
-                // 주최자(User) 정보 매핑
+                .eventInfo(eventDto)
                 .hostName(event.getHost() != null ? event.getHost().getName() : "정보 없음")
                 .hostEmail(event.getHost() != null ? event.getHost().getEmail() : "정보 없음")
                 .hostPhone(event.getHost() != null ? event.getHost().getPhone() : "정보 없음")
@@ -59,22 +74,43 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public Page<EventDto> searchEvents(
-    		String keyword, Long regionId, LocalDate filterStart, LocalDate filterEnd, 
+            String keyword, Long regionId, LocalDate filterStart, LocalDate filterEnd, 
             Integer categoryId, List<String> topicIds, 
             boolean checkFree, boolean hideClosed, Pageable pageable) {
 
-        // DB 쿼리용 문자열 변환
         String topicParam = (topicIds == null || topicIds.isEmpty()) ? null : String.join(",", topicIds);
 
+        Long regionMin = null;
+        Long regionMax = null;
+        
+        if (regionId != null) {
+            String idStr = String.valueOf(regionId);
+            
+            // 💡 핵심 버그 수정: 뒤에 붙은 0을 지우되, 최소 2자리(시/도)는 무조건 남깁니다!
+            String prefix = idStr.replaceAll("0+$", "");
+            if (prefix.length() < 2) {
+                prefix = idStr.substring(0, 2); // "5"가 되면 "50"(제주)으로 복구
+            }
+            
+            StringBuilder minSb = new StringBuilder(prefix);
+            StringBuilder maxSb = new StringBuilder(prefix);
+            
+            while (minSb.length() < 10) {
+                minSb.append("0");
+                maxSb.append("9");
+            }
+            regionMin = Long.parseLong(minSb.toString());
+            regionMax = Long.parseLong(maxSb.toString());
+        }
+
+        // Repository 쿼리 실행
         Page<EventEntity> eventPage = eventRepository.searchEvents(
-        		keyword, regionId, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
+                keyword, regionId, regionMin, regionMax, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
                 LocalDate.now(), topicParam, pageable
         );
 
         return eventPage.map(EventDto::fromEntity);
     }
-
-    // 🗑️ isMatched 메서드는 DB 필터링으로 대체되었으므로 삭제했습니다.
     
     @Override
     @Transactional(readOnly = true)
