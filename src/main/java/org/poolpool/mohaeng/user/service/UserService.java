@@ -13,6 +13,15 @@ public interface UserService {
 
 	//이메일 찾기
 	UserDto findByNameAndPhone(String name, String phone);
+	
+	//비밀번호 찾기
+	UserDto findByEmailAndPhone(String email, String phone);
+	
+	//비밀번호 재설정 안내 메일 전송
+	void sendRenewPwd(String email, String renewPwd);
+	
+	//랜덤 비밀번호 업데이트
+	void updateRenewPwd(Long userId, String email, String renewPwd);
 
 	//개인정보 조회
 	UserDto findById(String userId);
