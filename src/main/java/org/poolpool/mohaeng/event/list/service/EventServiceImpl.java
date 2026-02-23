@@ -35,17 +35,13 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventDetailDto getEventDetail(Long eventId) {
-        // 1. 행사 조회
+        // 기존 코드와 완전히 동일합니다.
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 행사입니다."));
 
-        // 2. 조회수 1 증가
         event.setViews(event.getViews() + 1);
-
-        // 3. DTO 변환 (기본 정보)
         EventDto eventDto = EventDto.fromEntity(event);
 
-        // 💡 4. 사진 파일 분류 로직 추가 (EVENT vs HBOOTH)
         List<String> detailImages = new ArrayList<>();
         List<String> boothImages = new ArrayList<>();
 
@@ -59,15 +55,12 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        // 💡 5. 분류된 리스트를 DTO에 세팅
         eventDto.setDetailImagePaths(detailImages);
         eventDto.setBoothFilePaths(boothImages);
 
-        // 6. 부스 및 부대시설 조회
         List<HostBoothEntity> booths = hostBoothRepository.findByEventId(eventId);
         List<HostFacilityEntity> facilities = hostFacilityRepository.findByEventId(eventId);
 
-        // 7. 최종 DTO 조립 및 반환
         return EventDetailDto.builder()
                 .eventInfo(eventDto)
                 .hostName(event.getHost() != null ? event.getHost().getName() : "정보 없음")
@@ -87,8 +80,32 @@ public class EventServiceImpl implements EventService {
 
         String topicParam = (topicIds == null || topicIds.isEmpty()) ? null : String.join(",", topicIds);
 
+        Long regionMin = null;
+        Long regionMax = null;
+        
+        if (regionId != null) {
+            String idStr = String.valueOf(regionId);
+            
+            // 💡 핵심 버그 수정: 뒤에 붙은 0을 지우되, 최소 2자리(시/도)는 무조건 남깁니다!
+            String prefix = idStr.replaceAll("0+$", "");
+            if (prefix.length() < 2) {
+                prefix = idStr.substring(0, 2); // "5"가 되면 "50"(제주)으로 복구
+            }
+            
+            StringBuilder minSb = new StringBuilder(prefix);
+            StringBuilder maxSb = new StringBuilder(prefix);
+            
+            while (minSb.length() < 10) {
+                minSb.append("0");
+                maxSb.append("9");
+            }
+            regionMin = Long.parseLong(minSb.toString());
+            regionMax = Long.parseLong(maxSb.toString());
+        }
+
+        // Repository 쿼리 실행
         Page<EventEntity> eventPage = eventRepository.searchEvents(
-                keyword, regionId, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
+                keyword, regionId, regionMin, regionMax, filterStart, filterEnd, categoryId, checkFree, hideClosed, 
                 LocalDate.now(), topicParam, pageable
         );
 

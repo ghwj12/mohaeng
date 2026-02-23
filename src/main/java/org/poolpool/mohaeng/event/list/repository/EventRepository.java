@@ -15,25 +15,28 @@ import org.springframework.data.repository.query.Param;
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     @Query("SELECT e FROM EventEntity e WHERE "
-    		+ "(:keyword IS NULL OR e.title LIKE CONCAT('%', :keyword, '%') OR e.simpleExplain LIKE CONCAT('%', :keyword, '%')) AND "
-            + "(:regionId IS NULL OR e.region.regionId = :regionId OR e.region.parent.regionId = :regionId) AND "
+            + "(:keyword IS NULL OR e.title LIKE CONCAT('%', :keyword, '%') OR e.simpleExplain LIKE CONCAT('%', :keyword, '%')) AND "
+            // 💡 핵심 수정: 지역 코드가 Min과 Max 범위 사이에 있는지 확인합니다! (하위 동네 싹 다 검색)
+            + "(:regionId IS NULL OR e.region.regionId BETWEEN :regionMin AND :regionMax) AND "
             + "(:filterStart IS NULL OR e.endDate >= :filterStart) AND "
             + "(:filterEnd IS NULL OR e.startDate <= :filterEnd) AND "
             + "(:categoryId IS NULL OR e.category.categoryId = :categoryId) AND "
             + "(:checkFree = false OR e.price = 0) AND "
             + "(:hideClosed = false OR e.endDate >= :today) AND "
-            + "(:topicIds IS NULL OR e.topicIds LIKE CONCAT('%', :topicIds, '%'))") // SQL 문법에 맞게 수정
+            + "(:topicIds IS NULL OR e.topicIds LIKE CONCAT('%', :topicIds, '%'))") 
     Page<EventEntity> searchEvents(
-    		@Param("keyword") String keyword,
-            @Param("regionId") Long regionId, 
+            @Param("keyword") String keyword,
+            @Param("regionId") Long regionId,
+            @Param("regionMin") Long regionMin, // 👈 추가됨
+            @Param("regionMax") Long regionMax, // 👈 추가됨
             @Param("filterStart") LocalDate filterStart,
             @Param("filterEnd") LocalDate filterEnd, 
             @Param("categoryId") Integer categoryId,
             @Param("checkFree") boolean checkFree, 
             @Param("hideClosed") boolean hideClosed,
             @Param("today") LocalDate today, 
-            @Param("topicIds") String topicIds, // 👈 8번째 인자로 추가!
-            Pageable pageable); // 👈 9번째 인자
+            @Param("topicIds") String topicIds, 
+            Pageable pageable);
 
     @Query("SELECT new org.poolpool.mohaeng.event.list.dto.EventRegionCountDto(e.region.regionId, COUNT(e)) "
             + "FROM EventEntity e " + "WHERE e.eventStatus NOT IN ('DELETED', '종료') " +
