@@ -18,6 +18,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             + "(:categoryId IS NULL OR e.category.categoryId = :categoryId) AND "
             + "(:checkFree = false OR e.price = 0) AND "
             + "(:hideClosed = false OR e.endDate >= :today) AND "
+            + "e.eventStatus != 'DELETED' AND "
             + "(:topicIds IS NULL OR e.topicIds LIKE CONCAT('%', :topicIds, '%'))")
     Page<EventEntity> searchEvents(
             @Param("keyword") String keyword,
@@ -33,11 +34,30 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             @Param("topicIds") String topicIds,
             Pageable pageable);
     @Query("SELECT new org.poolpool.mohaeng.event.list.dto.EventRegionCountDto(e.region.regionId, COUNT(e)) "
-            + "FROM EventEntity e " + "WHERE e.eventStatus NOT IN ('DELETED', '종료') " +
-            "GROUP BY e.region.regionId")
+            + "FROM EventEntity e "
+            + "WHERE e.eventStatus != 'DELETED' "
+            + "GROUP BY e.region.regionId")
     List<EventRegionCountDto> countEventsByRegion();
     @Query("SELECT new org.poolpool.mohaeng.event.list.dto.EventDailyCountDto(e.startDate, COUNT(e)) "
             + "FROM EventEntity e " + "WHERE e.region.regionId = :regionId " + "AND e.eventStatus NOT IN ('DELETED') "
             + "GROUP BY e.startDate")
     List<EventDailyCountDto> countDailyEventsByRegion(@Param("regionId") Long regionId);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
