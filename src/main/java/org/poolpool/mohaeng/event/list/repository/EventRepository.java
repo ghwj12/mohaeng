@@ -23,7 +23,10 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             + "(:categoryId IS NULL OR e.category.categoryId = :categoryId) AND "
             + "(:checkFree = false OR e.price = 0) AND "
             + "(:hideClosed = false OR e.endDate >= :today) AND "
-            + "(:topicIds IS NULL OR e.topicIds LIKE CONCAT('%', :topicIds, '%'))") 
+            + "(:topicIds IS NULL OR "
+            + "  CONCAT(',', e.topicIds, ',') LIKE CONCAT('%,', :topic1, ',%') OR "
+            + "  CONCAT(',', e.topicIds, ',') LIKE CONCAT('%,', :topic2, ',%') OR "
+            + "  CONCAT(',', e.topicIds, ',') LIKE CONCAT('%,', :topic3, ',%'))")
     Page<EventEntity> searchEvents(
             @Param("keyword") String keyword,
             @Param("regionId") Long regionId,

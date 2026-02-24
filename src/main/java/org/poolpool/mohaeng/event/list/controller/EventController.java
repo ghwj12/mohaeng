@@ -38,7 +38,7 @@ public class EventController {
 			@RequestParam(name = "topicIds", required = false) List<String> topicIds,
 			@RequestParam(name = "checkFree", defaultValue = "false") boolean checkFree,
 			@RequestParam(name = "hideClosed", defaultValue = "false") boolean hideClosed,
-			@PageableDefault(size = 10) Pageable pageable) {
+			@PageableDefault(size = 12) Pageable pageable) {
 		// 서비스 인터페이스 규격에 맞춰 개별 인자로 전달
 		Page<EventDto> result = eventService.searchEvents(keyword, regionId, filterStart, filterEnd, categoryId, topicIds,
 				checkFree, hideClosed, pageable);
