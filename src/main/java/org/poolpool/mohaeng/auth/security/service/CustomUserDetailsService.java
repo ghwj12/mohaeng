@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         
     	// 이메일로 회원 조회
         UserEntity user = userRepository.findByEmail(email).orElseThrow(() ->
-                new UsernameNotFoundException("해당 이메일의 회원이 없습니다. 이메일 : " + email));
+                new UsernameNotFoundException("해당 이메일의 회원이 없습니다."));
 
         String password = user.getUserPwd();
 

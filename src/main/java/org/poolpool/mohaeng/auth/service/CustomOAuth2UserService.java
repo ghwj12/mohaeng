@@ -27,7 +27,6 @@ public class CustomOAuth2UserService extends OidcUserService {
 
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-    	System.out.println("OAuth2UserService 실행됨");
     	
     	OidcUser oauth2User = super.loadUser(userRequest);
 
