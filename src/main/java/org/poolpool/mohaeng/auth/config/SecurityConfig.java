@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -58,8 +59,6 @@ public class SecurityConfig {
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider(userDetailsService); 
         provider.setPasswordEncoder(passwordEncoder);
-        //기본 설정에서 UsernameNotFoundException이 BadCredentialsException으로 변환되는 것을 막음
-        provider.setHideUserNotFoundExceptions(false);
         return provider;
     }
 
@@ -83,6 +82,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
+        	.cors(Customizer.withDefaults())
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
 
