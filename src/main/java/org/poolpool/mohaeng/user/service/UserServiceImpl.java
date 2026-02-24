@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService{
 	public int existsByEmail(String email) {
 		
 		Optional<UserEntity> existUser = userRepository.findByEmail(email);
-		if (existUser != null) {
+		if (existUser.isPresent()) {
 			if(existUser.get().getUserStatus() != UserStatus.WITHDRAWAL) return 1;
 		}
 		return 0;
