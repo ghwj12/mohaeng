@@ -8,6 +8,8 @@ public class EventInquiryDto {
     private Long inqId;
     private Long eventId;
     private Long userId;
+    // ✅ 질문 작성자 이름(USERS.NAME)
+    private String userName;
     private String content;
 
     private String replyContent;
@@ -23,6 +25,7 @@ public class EventInquiryDto {
         d.inqId = e.getInqId();
         d.eventId = e.getEventId();
         d.userId = e.getUserId();
+        // userName은 join/projection에서 채우는 것을 권장(엔티티는 userId만 보유)
         d.content = e.getContent();
         d.replyContent = e.getReplyContent();
         d.replyId = e.getReplyId();
@@ -51,6 +54,9 @@ public class EventInquiryDto {
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
+
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }

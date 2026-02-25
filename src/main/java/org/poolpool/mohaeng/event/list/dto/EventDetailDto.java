@@ -12,6 +12,9 @@ public class EventDetailDto {
     // 1. 행사 메인 정보 (행사명, 날짜, 장소, 조회수 등)
     private EventDto eventInfo;
 
+    // ✅ 프론트에서 주최자 여부 판단용
+    private Long hostId;
+
     private String hostName;
     private String hostEmail;
     private String hostPhone;

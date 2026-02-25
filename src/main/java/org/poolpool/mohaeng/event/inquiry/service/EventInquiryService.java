@@ -1,23 +1,25 @@
 package org.poolpool.mohaeng.event.inquiry.service;
 
 import org.poolpool.mohaeng.event.inquiry.dto.EventInquiryDto;
+import org.poolpool.mohaeng.event.inquiry.dto.InquiryMypageResponse;
+
 import java.util.List;
 
 public interface EventInquiryService {
 
     List<EventInquiryDto> getInquiryList(Long eventId);
 
-    Long createInquiry(EventInquiryDto dto);
+    Long createInquiry(Long currentUserId, Long eventId, EventInquiryDto dto);
 
-    void updateInquiry(EventInquiryDto dto);
+    void updateInquiry(Long currentUserId, Long inqId, EventInquiryDto dto);
 
-    void deleteInquiry(Long inqId);
+    void deleteInquiry(Long currentUserId, Long inqId);
 
-    void createReply(EventInquiryDto dto);
+    void createReply(Long currentUserId, Long inqId, EventInquiryDto dto);
 
-    void updateReply(EventInquiryDto dto);
+    void updateReply(Long currentUserId, Long inqId, EventInquiryDto dto);
 
-    void deleteReply(Long inqId);
+    void deleteReply(Long currentUserId, Long inqId);
+
+    InquiryMypageResponse mypage(Long currentUserId, String tab, int page, int size);
 }
-
-

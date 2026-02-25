@@ -70,6 +70,7 @@ public class EventServiceImpl implements EventService {
 
         return EventDetailDto.builder()
                 .eventInfo(eventDto)
+                .hostId(event.getHost() != null ? event.getHost().getUserId() : null)
                 .hostName(event.getHost() != null ? event.getHost().getName() : "정보 없음")
                 .hostEmail(event.getHost() != null ? event.getHost().getEmail() : "정보 없음")
                 .hostPhone(event.getHost() != null ? event.getHost().getPhone() : "정보 없음")
