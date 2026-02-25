@@ -57,6 +57,24 @@ public class EventHostServiceImpl implements EventHostService {
         EventDto eventDto = createDto.getEventInfo();
         EventEntity eventEntity = eventDto.toEntity();
         
+        if (eventDto.getCategory() != null && eventDto.getCategory().getCategoryId() != null) {
+            // category 객체 안의 categoryId를 꺼냅니다.
+            EventCategoryEntity category = eventCategoryRepository.findById(eventDto.getCategory().getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 카테고리입니다. ID: " + eventDto.getCategory().getCategoryId()));
+            
+            eventEntity.setCategory(category);
+        } else {
+            throw new RuntimeException("카테고리 정보가 누락되었습니다.");
+        }
+
+        // 3. 지역 정보도 같은 방식으로 처리 (region 안의 regionId 추출)
+        if (eventDto.getRegion() != null && eventDto.getRegion().getRegionId() != null) {
+            EventRegionEntity region = eventRegionRepository.findById(eventDto.getRegion().getRegionId())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 지역입니다. ID: " + eventDto.getRegion().getRegionId()));
+            
+            eventEntity.setRegion(region);
+        }
+        
         // 11번 유저(Host)를 찾아서 행사 엔티티에 연결!
         UserEntity host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));

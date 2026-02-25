@@ -10,6 +10,7 @@ import org.poolpool.mohaeng.user.type.SignupType;
 import org.poolpool.mohaeng.user.type.UserStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -133,4 +134,15 @@ public class UserController {
         
 		return ResponseEntity.ok(ApiResponse.ok("회원 탈퇴 성공", null));
     }
+	
+	// 회원 정보 조회 (이메일)
+	@GetMapping("/me")
+	public ResponseEntity<ApiResponse<UserDto>> getMyProfile(
+	        @AuthenticationPrincipal String userId) {  // 토큰에서 꺼낸 userId (숫자)
+	    UserDto user = userService.findById(userId);
+	    if (user == null) {
+	        return ResponseEntity.status(404).body(ApiResponse.fail("회원 정보 없음", null));
+	    }
+	    return ResponseEntity.ok(ApiResponse.ok("조회 성공", user));
+	}
 }
