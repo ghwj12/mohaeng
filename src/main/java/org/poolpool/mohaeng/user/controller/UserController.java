@@ -1,5 +1,9 @@
 package org.poolpool.mohaeng.user.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.poolpool.mohaeng.auth.dto.request.LoginRequest;
@@ -56,16 +60,52 @@ public class UserController {
 	
 	//이메일(아이디) 찾기
 	@PostMapping("/searchId")
-    public ResponseEntity<ApiResponse<String>> findEmail(@RequestBody LoginRequest req) {
-		UserDto user = userService.findByNameAndPhone(req.name(), req.phone());
-		if (user == null) {
-            return ResponseEntity.status(404).body(ApiResponse.fail("No User","회원 정보를 찾을 수 없습니다."));
-        } else if(user.getSignupType() == SignupType.GOOGLE) {
-        	return ResponseEntity.status(404).body(ApiResponse.fail("Social User", "구글 계정과 연동하여 가입되어 있습니다."));
-        } else if(user.getUserStatus() == UserStatus.WITHDRAWAL) {
-        	return ResponseEntity.status(404).body(ApiResponse.fail("Withdrawal User", "탈퇴된 계정입니다."));
+    public ResponseEntity<ApiResponse<Object>> findEmail(@RequestBody LoginRequest req) {
+		List<UserDto> users = userService.findAllByNameAndPhone(req.name(), req.phone());
+
+        if (users.isEmpty()) {
+            return ResponseEntity.status(404)
+                    .body(ApiResponse.fail("No User", "회원 정보를 찾을 수 없습니다."));
         }
-        return ResponseEntity.ok(ApiResponse.ok("이메일 찾기 성공!", user.getEmail()));
+
+        // 조회 결과 데이터 1개일 경우
+        if (users.size() == 1) {
+            UserDto user = users.get(0);
+            if (user.getSignupType() == SignupType.GOOGLE) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.fail("Social User", "구글 계정(" + user.getEmail() + ")과 연동하여 가입되어 있습니다."));
+            } else if (user.getUserStatus() == UserStatus.WITHDRAWAL) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.fail("Withdrawal User", "회원 정보를 찾을 수 없습니다."));
+            }
+            return ResponseEntity.ok(ApiResponse.ok("이메일 찾기 성공!", user.getEmail()));
+        }
+
+        // 조회 결과 데이터 여러 개일 경우
+        Map<String, List<String>> emailMap = new HashMap<>();
+        List<String> googleEmails = new ArrayList<>();
+        List<String> normalEmails = new ArrayList<>();
+
+        for (UserDto user : users) {
+            if (user.getUserStatus() == UserStatus.WITHDRAWAL) {
+                continue; // 탈퇴된 계정 제외
+            }
+            if (user.getSignupType() == SignupType.GOOGLE) {
+                googleEmails.add(user.getEmail());
+            } else {
+                normalEmails.add(user.getEmail());
+            }
+        }
+
+        emailMap.put("googleEmails", googleEmails);
+        emailMap.put("normalEmails", normalEmails);
+
+        if (googleEmails.isEmpty() && normalEmails.isEmpty()) {
+            return ResponseEntity.status(404)
+                    .body(ApiResponse.fail("No Valid Users", "회원 정보를 찾을 수 없습니다."));
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok("이메일 찾기 성공!", emailMap));
 	}
 	
 	//비밀번호 찾기
