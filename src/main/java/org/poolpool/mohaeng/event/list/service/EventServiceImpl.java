@@ -36,13 +36,16 @@ public class EventServiceImpl implements EventService {
     private final HostFacilityRepository hostFacilityRepository;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional 
     public EventDetailDto getEventDetail(Long eventId, boolean shouldIncreaseView) {
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 행사입니다."));
 
-        Integer currentViews = (event.getViews() == null) ? 0 : event.getViews();
-        event.setViews(currentViews + 1);
+        // ✅ 컨트롤러에서 넘겨준 '조회수 증가 여부'를 여기서 체크합니다!
+        if (shouldIncreaseView) {
+            Integer currentViews = (event.getViews() == null) ? 0 : event.getViews();
+            event.setViews(currentViews + 1);
+        }
         
         EventDto eventDto = EventDto.fromEntity(event);
 

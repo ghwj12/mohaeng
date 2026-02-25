@@ -5,7 +5,6 @@ import java.util.List;
 import org.poolpool.mohaeng.auth.security.principal.CustomUserPrincipal;
 import org.poolpool.mohaeng.user.entity.UserEntity;
 import org.poolpool.mohaeng.user.repository.UserRepository;
-import org.poolpool.mohaeng.user.type.UserStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

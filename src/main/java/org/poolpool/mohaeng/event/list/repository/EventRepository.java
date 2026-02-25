@@ -91,21 +91,3 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     	        @Param("regionMin") Long regionMin,
     	        @Param("regionMax") Long regionMax);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
