@@ -59,7 +59,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<String>> findEmail(@RequestBody LoginRequest req) {
 		UserDto user = userService.findByNameAndPhone(req.name(), req.phone());
 		if (user == null) {
-            return ResponseEntity.status(404).body(ApiResponse.fail("회원 정보를 찾을 수 없습니다.", null));
+            return ResponseEntity.status(404).body(ApiResponse.fail("No User","회원 정보를 찾을 수 없습니다."));
         } else if(user.getSignupType() == SignupType.GOOGLE) {
         	return ResponseEntity.status(404).body(ApiResponse.fail("Social User", "구글 계정과 연동하여 가입되어 있습니다."));
         } else if(user.getUserStatus() == UserStatus.WITHDRAWAL) {
@@ -73,7 +73,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<String>> sendNewPwd(@RequestBody LoginRequest req) {
 		UserDto user = userService.findByEmailAndPhone(req.userId(), req.phone());
 		if (user == null) {
-            return ResponseEntity.status(404).body(ApiResponse.fail("회원 정보를 찾을 수 없습니다.", null));
+            return ResponseEntity.status(404).body(ApiResponse.fail("No User", "회원 정보를 찾을 수 없습니다."));
         } else if(user.getSignupType() == SignupType.GOOGLE) {
         	return ResponseEntity.status(404).body(ApiResponse.fail("Social User", "구글 계정과 연동하여 가입되어 있습니다."));
         } else if(user.getUserStatus() == UserStatus.WITHDRAWAL) {
