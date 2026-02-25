@@ -12,7 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,10 +50,34 @@ public class EventController {
 	}
 
 	@GetMapping("/{eventId}")
-	public ResponseEntity<EventDetailDto> getEventDetail(@PathVariable("eventId") Long eventId) {
-		// 조회수 증가 로직을 여기에 추가하거나 Service에 포함시키면 좋습니다!
-		EventDetailDto detail = eventService.getEventDetail(eventId);
-		return ResponseEntity.ok(detail);
+	public ResponseEntity<EventDetailDto> getEventDetail(
+	    @PathVariable("eventId") Long eventId,
+	    @CookieValue(name = "viewedEvents", required = false) String viewedEvents // 💡 쿠키를 어노테이션으로 바로 가져옵니다.
+	) {
+	    // 1. 이미 본 이벤트인지 확인
+	    boolean isViewed = (viewedEvents != null && viewedEvents.contains("[" + eventId + "]"));
+
+	    // 2. 서비스 호출 (조회수 증가 여부 전달)
+	    EventDetailDto detail = eventService.getEventDetail(eventId, !isViewed);
+
+	    // 3. 처음 보는 이벤트라면 쿠키를 포함해서 응답
+	    if (!isViewed) {
+	        String newValue = (viewedEvents == null ? "" : viewedEvents) + "[" + eventId + "]";
+	        
+	        ResponseCookie cookie = ResponseCookie.from("viewedEvents", newValue)
+	                .path("/")
+	                .maxAge(60 * 60 * 24)
+	                .httpOnly(true)
+	                .secure(false) // HTTPS 환경이라면 true로 변경
+	                .build();
+
+	        return ResponseEntity.ok()
+	                .header(HttpHeaders.SET_COOKIE, cookie.toString()) // 💡 헤더에 쿠키를 실어 보냅니다.
+	                .body(detail);
+	    }
+
+	    // 4. 이미 본 이벤트라면 그냥 데이터만 응답
+	    return ResponseEntity.ok(detail);
 	}
 
 	// 지도에서 지역별 마커 숫자를 표시하기 위한 API

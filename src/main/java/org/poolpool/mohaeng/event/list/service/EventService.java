@@ -10,6 +10,7 @@ import org.poolpool.mohaeng.event.list.dto.EventRegionCountDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+
 public interface EventService {
     /**
      * 7가지 다중 필터를 적용하여 이벤트 목록을 조회합니다.
@@ -27,7 +28,7 @@ public interface EventService {
             Pageable pageable       // 페이징 정보
     );
     
-    EventDetailDto getEventDetail(Long eventId);
+    EventDetailDto getEventDetail(Long eventId, boolean shouldIncreaseView);
     List<EventRegionCountDto> getEventCountsByRegion();
     List<EventDailyCountDto> getDailyEventCountsByRegion(Long regionId);
 }
