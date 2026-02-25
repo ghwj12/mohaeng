@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,8 +24,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.Customizer;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -59,6 +60,10 @@ public class SecurityConfig {
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider(userDetailsService); 
         provider.setPasswordEncoder(passwordEncoder);
+        
+      //기본 설정에서 UsernameNotFoundException이 BadCredentialsException으로 변환되는 것을 막음
+        provider.setHideUserNotFoundExceptions(false);
+        
         return provider;
     }
 
@@ -88,12 +93,14 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 // React static + SPA entry (절대 "/**" permitAll 금지)
+            	.dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/", "/index.html",
                         "/favicon.ico", "/manifest.json", "/robots.txt",
                         "/assets/**", "/static/**",
                         "/*.js", "/*.css", "/*.map",
-                        "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg", "/*.webp", "/*.ico"
+                        "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg", "/*.webp", "/*.ico",
+                        "/error"
                 ).permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
@@ -154,5 +161,12 @@ public class SecurityConfig {
         
 
         return http.build();
+    }
+    
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers(org.springframework.boot.autoconfigure.security.servlet.PathRequest.toStaticResources().atCommonLocations())
+                .requestMatchers("/favicon.ico", "/manifest.json", "/*.png", "/error"); // 💡 여기도 error 추가
     }
 }

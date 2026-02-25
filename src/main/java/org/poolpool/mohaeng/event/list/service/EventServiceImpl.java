@@ -36,12 +36,14 @@ public class EventServiceImpl implements EventService {
     private final HostFacilityRepository hostFacilityRepository;
 
     @Override
-    @Transactional
-    public EventDetailDto getEventDetail(Long eventId) {
+    @Transactional(readOnly = true)
+    public EventDetailDto getEventDetail(Long eventId, boolean shouldIncreaseView) {
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 행사입니다."));
 
-        event.setViews(event.getViews() + 1);
+        Integer currentViews = (event.getViews() == null) ? 0 : event.getViews();
+        event.setViews(currentViews + 1);
+        
         EventDto eventDto = EventDto.fromEntity(event);
 
         List<String> detailImages = new ArrayList<>();
