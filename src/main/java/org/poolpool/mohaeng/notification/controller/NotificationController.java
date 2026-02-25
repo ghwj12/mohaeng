@@ -21,9 +21,15 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<PageResponse<NotificationItemDto>>> list(
             @RequestHeader(name = "userId") long userId,
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "5") int size
+            @RequestParam(name = "size", defaultValue = "5") int size,
+            @RequestParam(name = "all", defaultValue = "false") boolean all
     ) {
-        var data = notificationService.getList(userId, PageRequest.of(page, size));
+        int finalPage = all ? 0 : page;
+
+        //  무한대로 주면 위험하니까 상한을 두는 걸 추천
+        int finalSize = all ? 2000 : Math.min(size, 200);
+
+        var data = notificationService.getList(userId, PageRequest.of(finalPage, finalSize));
         return ResponseEntity.ok(ApiResponse.ok("내 알림 목록 조회 성공", data));
     }
 
