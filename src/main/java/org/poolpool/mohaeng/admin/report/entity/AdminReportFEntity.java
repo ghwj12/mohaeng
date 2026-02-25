@@ -9,7 +9,7 @@ import lombok.*;
 
 @Entity
 @Table(
-    name = "admin_report",
+    name = "event_report",
     uniqueConstraints = @UniqueConstraint(
         name = "uk_report_reporter_event",
         columnNames = {"reporter_id", "event_id"}
