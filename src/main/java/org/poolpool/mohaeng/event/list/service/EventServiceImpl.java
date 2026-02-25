@@ -156,6 +156,14 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventDailyCountDto> getDailyEventCountsByRegion(Long regionId) {
-        return eventRepository.countDailyEventsByRegion(regionId);
+        String idStr = String.valueOf(regionId);
+        String prefix = idStr.replaceAll("0+$", "");
+        if (prefix.length() < 2) prefix = idStr.substring(0, 2);
+        StringBuilder minSb = new StringBuilder(prefix);
+        StringBuilder maxSb = new StringBuilder(prefix);
+        while (minSb.length() < 10) { minSb.append("0"); maxSb.append("9"); }
+        Long regionMin = Long.parseLong(minSb.toString());
+        Long regionMax = Long.parseLong(maxSb.toString());
+        return eventRepository.countDailyEventsByRegion(regionMin, regionMax);
     }
 }
