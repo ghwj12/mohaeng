@@ -3,6 +3,7 @@ package org.poolpool.mohaeng.user.service;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.poolpool.mohaeng.auth.token.refresh.repository.RefreshTokenRepository;
@@ -77,9 +78,12 @@ public class UserServiceImpl implements UserService{
 
 	//이메일 찾기
 	@Override
-	public UserDto findByNameAndPhone(String name, String phone) {
-		return UserDto.fromEntity(userRepository.findByNameAndPhone(name, phone));
-	}
+	public List<UserDto> findAllByNameAndPhone(String name, String phone) {
+        List<UserEntity> users = userRepository.findAllByNameAndPhone(name, phone);
+        return users.stream()
+                    .map(UserDto::fromEntity)
+                    .toList();
+    }
 	
 	//비밀번호 찾기
 	@Override

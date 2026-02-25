@@ -1,5 +1,7 @@
 package org.poolpool.mohaeng.user.service;
 
+import java.util.List;
+
 import org.poolpool.mohaeng.user.dto.UserDto;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -12,7 +14,7 @@ public interface UserService {
 	int insertUser(UserDto user);
 
 	//이메일 찾기
-	UserDto findByNameAndPhone(String name, String phone);
+	List<UserDto> findAllByNameAndPhone(String name, String phone);
 	
 	//비밀번호 찾기
 	UserDto findByEmailAndPhone(String email, String phone);

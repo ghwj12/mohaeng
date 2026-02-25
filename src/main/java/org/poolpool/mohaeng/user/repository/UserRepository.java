@@ -1,6 +1,7 @@
 package org.poolpool.mohaeng.user.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.poolpool.mohaeng.user.entity.UserEntity;
@@ -18,7 +19,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 	Optional<UserEntity> findByEmail(String email);
 
 	//이메일 찾기
-	UserEntity findByNameAndPhone(String name, String phone);
+	List<UserEntity> findAllByNameAndPhone(String name, String phone);
 
 	//비밀번호 찾기
 	UserEntity findByEmailAndPhone(String email, String phone);
