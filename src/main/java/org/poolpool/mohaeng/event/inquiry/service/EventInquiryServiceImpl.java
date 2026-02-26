@@ -9,6 +9,7 @@ import org.poolpool.mohaeng.event.inquiry.entity.EventInquiryEntity;
 import org.poolpool.mohaeng.event.inquiry.repository.EventInquiryRepository;
 import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.list.repository.EventRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,30 +28,14 @@ public class EventInquiryServiceImpl implements EventInquiryService {
     @Override
     @Transactional(readOnly = true)
     public List<EventInquiryDto> getInquiryList(Long eventId) {
-        // ✅ 작성자 이름 포함 조회(Repository에 findListWithUserName 있어야 함)
-        return repo.findListWithUserName(eventId)
-                .stream()
-                .map(r -> {
-                    EventInquiryDto d = new EventInquiryDto();
-                    d.setInqId(r.getInqId());
-                    d.setEventId(r.getEventId());
-                    d.setUserId(r.getUserId());
-                    d.setUserName(r.getUserName());
-                    d.setContent(r.getContent());
-                    d.setReplyContent(r.getReplyContent());
-                    d.setReplyId(r.getReplyId());
-                    d.setReplyDate(r.getReplyDate());
-                    d.setStatus(r.getStatus());
-                    d.setCreatedAt(r.getCreatedAt());
-                    return d;
-                })
-                .toList();
+        return repo.findInquiryListDtoByEventId(eventId);
     }
 
     @Override
     @Transactional
     public Long createInquiry(Long currentUserId, Long eventId, EventInquiryDto dto) {
         if (currentUserId == null) throw new IllegalStateException("로그인이 필요합니다.");
+
         dto.setUserId(currentUserId);
         dto.setEventId(eventId);
         if (dto.getStatus() == null) dto.setStatus("대기");
@@ -108,7 +93,6 @@ public class EventInquiryServiceImpl implements EventInquiryService {
         EventInquiryEntity e = repo.findById(inqId)
                 .orElseThrow(() -> new IllegalArgumentException("문의 없음"));
 
-        // ✅ 주최자만 답변 가능
         assertHostOfEvent(e.getEventId(), currentUserId);
 
         e.setReplyContent(dto.getReplyContent());
@@ -122,7 +106,6 @@ public class EventInquiryServiceImpl implements EventInquiryService {
     @Override
     @Transactional
     public void updateReply(Long currentUserId, Long inqId, EventInquiryDto dto) {
-        // ✅ 답변 덮어쓰기
         createReply(currentUserId, inqId, dto);
     }
 
@@ -132,7 +115,6 @@ public class EventInquiryServiceImpl implements EventInquiryService {
         EventInquiryEntity e = repo.findById(inqId)
                 .orElseThrow(() -> new IllegalArgumentException("문의 없음"));
 
-        // ✅ 주최자만 답변 삭제 가능
         assertHostOfEvent(e.getEventId(), currentUserId);
 
         e.setReplyContent(null);
@@ -151,26 +133,21 @@ public class EventInquiryServiceImpl implements EventInquiryService {
         String t = (tab == null) ? "ALL" : tab.trim().toUpperCase();
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
 
-        Page<EventInquiryEntity> p;
+        Page<EventInquiryDto> p;
         switch (t) {
             case "WRITTEN":
-                p = repo.findByUserIdOrderByCreatedAtDesc(currentUserId, pageable);
+                p = repo.findWrittenForMypageDto(currentUserId, pageable);
                 break;
             case "RECEIVED":
-                p = repo.findReceivedByHostUserId(currentUserId, pageable);
+                p = repo.findReceivedForMypageDto(currentUserId, pageable);
                 break;
             case "ALL":
             default:
-                p = repo.findAllForMypage(currentUserId, pageable);
+                p = repo.findAllForMypageDto(currentUserId, pageable);
         }
 
-        List<EventInquiryDto> items = p.getContent()
-                .stream()
-                .map(EventInquiryDto::fromEntity)
-                .toList();
-
         return InquiryMypageResponse.builder()
-                .items(items)
+                .items(p.getContent())
                 .page(p.getNumber())
                 .size(p.getSize())
                 .totalPages(p.getTotalPages())
