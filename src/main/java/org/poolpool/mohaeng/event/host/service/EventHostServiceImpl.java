@@ -156,8 +156,8 @@ public class EventHostServiceImpl implements EventHostService {
                                 .faciPrice(dto.getFaciPrice())
                                 .faciUnit(dto.getFaciUnit())
                                 .hasCount(dto.getHasCount())
-                                .totalCount(dto.getTotalCount())
-                                .remainCount(dto.getTotalCount())
+                                .totalCount(dto.getHasCount() ? dto.getTotalCount() : null)
+                                .remainCount(dto.getHasCount() ? dto.getTotalCount() : null)
                                 .build();
                     })
                     .collect(Collectors.toList());

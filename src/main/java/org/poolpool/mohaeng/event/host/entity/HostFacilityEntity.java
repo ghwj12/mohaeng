@@ -46,11 +46,11 @@ public class HostFacilityEntity {
     @Builder.Default
     private Boolean hasCount = false;
 
-    @Column(name = "TOTAL_COUNT", nullable = false)
+    @Column(name = "TOTAL_COUNT", nullable = true)
     @Builder.Default
     private Integer totalCount = 0;
 
-    @Column(name = "REMAIN_COUNT")
+    @Column(name = "REMAIN_COUNT", nullable = true)
     private Integer remainCount;
 
     @CreationTimestamp
