@@ -18,11 +18,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -132,9 +131,9 @@ public class UserController {
 	}
 	
 	//개인정보 조회
-	@GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserDto>> getProfile(@PathVariable("userId") String userId) {
-		UserDto user = userService.findById(userId);
+	@GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserDto>> getProfile(@AuthenticationPrincipal String userId) {
+		UserDto user = userService.findById(Long.valueOf(userId));
         if (user == null) {
             return ResponseEntity.status(404).body(ApiResponse.fail("회원 정보를 찾을 수 없습니다.", null));
         }
@@ -142,26 +141,26 @@ public class UserController {
     }
 	
 	//개인정보 수정
-	@PatchMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<Void>> updateProfile(
-            @PathVariable("userId") String userId,
-            @ModelAttribute UserDto user,
-            @RequestParam(name = "deletePhoto", defaultValue = "false") boolean deletePhoto,
-            @RequestParam(name = "newPhoto", required = false) MultipartFile photo
+	@PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updateProfile(
+    		@AuthenticationPrincipal String userId,
+    		@RequestPart(name = "userInfo") UserDto user,
+    		@RequestPart(name = "deletePhoto", required = false) boolean deletePhoto,
+    		@RequestPart(name = "newPhoto", required = false) MultipartFile photo
     ) {
         user.setUserId(Long.valueOf(userId));
         
         try {
             userService.patchUser(user, deletePhoto, photo);
-            return ResponseEntity.ok(ApiResponse.ok("회원 정보 수정 성공", null));
+            return ResponseEntity.ok("회원 정보 수정 성공");
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(404).body(ApiResponse.fail(e.getMessage(), null));
+            return ResponseEntity.status(404).body(e.getMessage());
         } catch (RuntimeException e) {
             log.error("회원 사진 업로드 실패", e);
-            return ResponseEntity.status(500).body(ApiResponse.fail(e.getMessage(), null));
+            return ResponseEntity.status(500).body(e.getMessage());
         } catch (Exception e) {
             log.error("회원 정보 수정 실패", e);
-            return ResponseEntity.status(500).body(ApiResponse.fail("회원 정보 수정 실패", null));
+            return ResponseEntity.status(500).body("회원 정보 수정 실패");
         }
 
     }
@@ -175,11 +174,11 @@ public class UserController {
 		return ResponseEntity.ok(ApiResponse.ok("회원 탈퇴 성공", null));
     }
 	
-	// 회원 정보 조회 (이메일)
+	// 행사 등록 시 회원 정보 조회 (userId)
 	@GetMapping("/me")
 	public ResponseEntity<ApiResponse<UserDto>> getMyProfile(
 	        @AuthenticationPrincipal String userId) {  // 토큰에서 꺼낸 userId (숫자)
-	    UserDto user = userService.findById(userId);
+	    UserDto user = userService.findById(Long.valueOf(userId));
 	    if (user == null) {
 	        return ResponseEntity.status(404).body(ApiResponse.fail("회원 정보 없음", null));
 	    }

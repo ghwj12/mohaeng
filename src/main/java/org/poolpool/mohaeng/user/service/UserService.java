@@ -26,7 +26,7 @@ public interface UserService {
 	void updateRenewPwd(Long userId, String email, String renewPwd);
 
 	//개인정보 조회
-	UserDto findById(String userId);
+	UserDto findById(Long userId);
 
 	//개인정보 수정
 	void patchUser(UserDto user, boolean deletePhoto, MultipartFile photo);

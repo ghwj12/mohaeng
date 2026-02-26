@@ -22,8 +22,7 @@ public final class EndpointPolicy {
 
     //회원(USER)만 가능
     public static final String[] USER_PAGE = { 
-    		"/api/user/**", 
-    		"/api/wishlist/**"
+    		"/api/user/**"
     };
 
     // 회원(USER), 관리자(ADMIN) 가능
