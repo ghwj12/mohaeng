@@ -1,6 +1,7 @@
 package org.poolpool.mohaeng.event.inquiry.dto;
 
 import org.poolpool.mohaeng.event.inquiry.entity.EventInquiryEntity;
+
 import java.time.LocalDateTime;
 
 public class EventInquiryDto {
@@ -8,8 +9,10 @@ public class EventInquiryDto {
     private Long inqId;
     private Long eventId;
     private Long userId;
-    // ✅ 질문 작성자 이름(USERS.NAME)
+
+    // ✅ 질문 작성자 이름(USERS.NAME) - mypage 조회 시 join/projection에서 채움
     private String userName;
+
     private String content;
 
     private String replyContent;
@@ -19,13 +22,48 @@ public class EventInquiryDto {
     private String status;
     private LocalDateTime createdAt;
 
+    // ✅ 마이페이지에서 행사 정보까지 같이 내려주기 위한 필드
+    private String eventTitle;      // EVENT.TITLE
+    private String eventThumbnail;  // EVENT.THUMBNAIL
+
+    public EventInquiryDto() {}
+
+    /** ✅ JPQL constructor expression용 생성자 */
+    public EventInquiryDto(
+            Long inqId,
+            Long eventId,
+            Long userId,
+            String userName,
+            String content,
+            String replyContent,
+            Long replyId,
+            LocalDateTime replyDate,
+            String status,
+            LocalDateTime createdAt,
+            String eventTitle,
+            String eventThumbnail
+    ) {
+        this.inqId = inqId;
+        this.eventId = eventId;
+        this.userId = userId;
+        this.userName = userName;
+        this.content = content;
+        this.replyContent = replyContent;
+        this.replyId = replyId;
+        this.replyDate = replyDate;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.eventTitle = eventTitle;
+        this.eventThumbnail = eventThumbnail;
+    }
+
     // Entity -> DTO
     public static EventInquiryDto fromEntity(EventInquiryEntity e) {
         EventInquiryDto d = new EventInquiryDto();
         d.inqId = e.getInqId();
         d.eventId = e.getEventId();
         d.userId = e.getUserId();
-        // userName은 join/projection에서 채우는 것을 권장(엔티티는 userId만 보유)
+        // userName / eventTitle / eventThumbnail 은 join/projection에서 채우는 것을 권장
         d.content = e.getContent();
         d.replyContent = e.getReplyContent();
         d.replyId = e.getReplyId();
@@ -35,7 +73,7 @@ public class EventInquiryDto {
         return d;
     }
 
-    // DTO -> Entity (등록용 기본 필드만)
+    // DTO -> Entity (등록/수정용 기본 필드만)
     public EventInquiryEntity toEntity() {
         EventInquiryEntity e = new EventInquiryEntity();
         e.setInqId(this.inqId); // 수정 시 사용, 등록 시 null이면 auto-increment
@@ -75,4 +113,10 @@ public class EventInquiryDto {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getEventTitle() { return eventTitle; }
+    public void setEventTitle(String eventTitle) { this.eventTitle = eventTitle; }
+
+    public String getEventThumbnail() { return eventThumbnail; }
+    public void setEventThumbnail(String eventThumbnail) { this.eventThumbnail = eventThumbnail; }
 }
