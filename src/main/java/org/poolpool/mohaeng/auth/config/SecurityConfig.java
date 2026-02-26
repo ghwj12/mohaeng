@@ -122,6 +122,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, EndpointPolicy.ADMIN_PAGE).hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, EndpointPolicy.ADMIN_PAGE).hasRole("ADMIN")
                 
+                // Payment endpoints
+                .requestMatchers("/api/payment/**").authenticated()
+                
                 // USER only
                 .requestMatchers(HttpMethod.POST, EndpointPolicy.USER_PAGE).hasRole("USER")
                 .requestMatchers(HttpMethod.PUT, EndpointPolicy.USER_PAGE).hasRole("USER")
