@@ -125,29 +125,50 @@ public class ReviewController {
 
     @PostMapping("/reviews")
     public ResponseEntity<ApiResponse<Void>> create(
-            @RequestHeader(name = "userId") long userId,
+            Authentication auth,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @Valid @RequestBody ReviewCreateRequestDto request
     ) {
-        reviewService.create(userId, request);
+        Long uid = extractUserId(auth, authorization);
+        if (uid == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail("로그인이 필요합니다.", (Void) null));
+        }
+
+        reviewService.create(uid, request);
         return ResponseEntity.ok(ApiResponse.ok("리뷰 작성 성공", (Void) null));
     }
 
     @PutMapping("/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> update(
-            @RequestHeader(name = "userId") long userId,
+            Authentication auth,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable("reviewId") long reviewId,
             @Valid @RequestBody ReviewEditRequestDto request
     ) {
-        reviewService.edit(userId, reviewId, request);
+        Long uid = extractUserId(auth, authorization);
+        if (uid == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail("로그인이 필요합니다.", (Void) null));
+        }
+
+        reviewService.edit(uid, reviewId, request);
         return ResponseEntity.ok(ApiResponse.ok("리뷰 수정 성공", (Void) null));
     }
 
     @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> delete(
-            @RequestHeader(name = "userId") long userId,
+            Authentication auth,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable("reviewId") long reviewId
     ) {
-        reviewService.delete(userId, reviewId);
+        Long uid = extractUserId(auth, authorization);
+        if (uid == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail("로그인이 필요합니다.", (Void) null));
+        }
+
+        reviewService.delete(uid, reviewId);
         return ResponseEntity.ok(ApiResponse.ok("리뷰 삭제 성공", (Void) null));
     }
 }
