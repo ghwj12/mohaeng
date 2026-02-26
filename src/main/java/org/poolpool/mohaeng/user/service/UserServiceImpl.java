@@ -138,9 +138,9 @@ public class UserServiceImpl implements UserService{
 
 	//개인정보 조회
 	@Override
-	public UserDto findById(String userId) {
+	public UserDto findById(Long userId) {
 		return UserDto.fromEntity(
-		        userRepository.findById(Long.valueOf(userId))
+		        userRepository.findById(userId)
 		                .orElseThrow(() -> new IllegalArgumentException("회원이 존재하지 않습니다."))
 		);
 	}
