@@ -30,6 +30,7 @@ public final class EndpointPolicy {
     public static final String[] SERVICE_PAGE = {
             "/api/eventParticipation/**",
             "/api/eventInquiry/**",
+            "/api/mypage/**",
             "/api/reviews", "/api/reviews/**",
             "/api/reports",
             "/api/notifications", "/api/notifications/**" 

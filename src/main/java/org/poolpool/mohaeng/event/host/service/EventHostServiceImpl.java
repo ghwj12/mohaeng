@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.poolpool.mohaeng.common.config.UploadProperties;
 import org.poolpool.mohaeng.common.util.FileNameChange;
 import org.poolpool.mohaeng.event.host.dto.EventCreateDto;
+import org.poolpool.mohaeng.event.host.dto.HostEventMypageResponse;
+import org.poolpool.mohaeng.event.host.dto.HostEventSummaryDto;
 import org.poolpool.mohaeng.event.host.entity.HostBoothEntity;
 import org.poolpool.mohaeng.event.host.entity.HostFacilityEntity;
 import org.poolpool.mohaeng.event.host.repository.FileRepository;
@@ -26,6 +28,10 @@ import org.poolpool.mohaeng.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import lombok.RequiredArgsConstructor;
 
@@ -214,5 +220,27 @@ public class EventHostServiceImpl implements EventHostService {
         }
 
         event.changeStatusToDeleted();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HostEventMypageResponse myEvents(Long hostId, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(50, Math.max(1, size));
+
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<EventEntity> p = eventRepository.findByHost_UserIdAndEventStatusNot(hostId, "DELETED", pageable);
+
+        List<HostEventSummaryDto> items = p.getContent().stream()
+                .map(HostEventSummaryDto::fromEntity)
+                .toList();
+
+        return HostEventMypageResponse.builder()
+                .items(items)
+                .page(safePage)
+                .size(safeSize)
+                .totalPages(p.getTotalPages())
+                .totalElements(p.getTotalElements())
+                .build();
     }
 }
