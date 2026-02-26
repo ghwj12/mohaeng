@@ -1,14 +1,16 @@
 package org.poolpool.mohaeng.event.participation.repository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import java.util.List;
+import java.util.Optional;
+
 import org.poolpool.mohaeng.event.participation.entity.EventParticipationEntity;
 import org.poolpool.mohaeng.event.participation.entity.ParticipationBoothEntity;
 import org.poolpool.mohaeng.event.participation.entity.ParticipationBoothFacilityEntity;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Repository
 public class EventParticipationRepository {
@@ -69,6 +71,15 @@ public class EventParticipationRepository {
         }
         return em.merge(entity);
     }
+    
+    @Transactional
+    public void decreaseBoothRemainCount(Long hostBoothId) {
+        em.createQuery(
+            "UPDATE HostBoothEntity h SET h.remainCount = h.remainCount - 1 " +
+            "WHERE h.boothId = :boothId AND h.remainCount > 0")
+          .setParameter("boothId", hostBoothId)
+          .executeUpdate();
+    }
 
     // =========================
     // PARTICIPATION_BOOTH_FACILITY
@@ -82,6 +93,16 @@ public class EventParticipationRepository {
                 )
                 .setParameter("pctBoothId", pctBoothId)
                 .getResultList();
+    }
+    
+    @Transactional
+    public void decreaseFacilityRemainCount(Long hostBoothFaciId, int count) {
+        em.createQuery(
+            "UPDATE HostFacilityEntity h SET h.remainCount = h.remainCount - :count " +
+            "WHERE h.hostBoothfaciId = :faciId AND h.remainCount >= :count")
+          .setParameter("faciId", hostBoothFaciId)
+          .setParameter("count", count)
+          .executeUpdate();
     }
     
      // =========================

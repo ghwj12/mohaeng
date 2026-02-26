@@ -27,8 +27,6 @@ public class ParticipationBoothDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Long paymentId;
-
     // 시설 신청 목록
     private List<ParticipationBoothFacilityDto> facilities = new ArrayList<>();
 
@@ -50,7 +48,6 @@ public class ParticipationBoothDto {
         d.approvedDate = e.getApprovedDate();
         d.createdAt = e.getCreatedAt();
         d.updatedAt = e.getUpdatedAt();
-        d.paymentId = e.getPaymentId();
         return d;
     }
 
@@ -69,7 +66,6 @@ public class ParticipationBoothDto {
         e.setFacilityPrice(this.facilityPrice);
         e.setTotalPrice(this.totalPrice);
         e.setStatus(this.status);
-        e.setPaymentId(this.paymentId);
         return e;
     }
 
@@ -100,8 +96,6 @@ public class ParticipationBoothDto {
     public void setTotalPrice(Integer totalPrice) { this.totalPrice = totalPrice; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public Long getPaymentId() { return paymentId; }
-    public void setPaymentId(Long paymentId) { this.paymentId = paymentId; }
     public List<ParticipationBoothFacilityDto> getFacilities() { return facilities; }
     public void setFacilities(List<ParticipationBoothFacilityDto> facilities) { this.facilities = facilities; }
 }
