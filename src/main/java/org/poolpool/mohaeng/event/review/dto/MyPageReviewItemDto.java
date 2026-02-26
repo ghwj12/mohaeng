@@ -15,8 +15,8 @@ public class MyPageReviewItemDto {
   public static MyPageReviewItemDto fromEntity(ReviewEntity e) {
     MyPageReviewItemDto dto = new MyPageReviewItemDto();
     dto.reviewId = e.getReviewId();
-    dto.eventId = e.getEvent().getEventId();           // ✅ EventEntity 필드명 맞게 수정
-    dto.eventTitle = e.getEvent().getTitle();          // ✅ EventEntity 필드명 맞게 수정
+    dto.eventId = e.getEvent().getEventId();           //  EventEntity 필드명 맞게 수정
+    dto.eventTitle = e.getEvent().getTitle();          //  EventEntity 필드명 맞게 수정
     dto.avgRating = (e.getRatingContent() + e.getRatingProgress() + e.getRatingMood()) / 3.0;
 
     String c = e.getContent() == null ? "" : e.getContent();

@@ -16,7 +16,7 @@ public class EventReviewTabItemDto {
   public static EventReviewTabItemDto fromEntity(ReviewEntity e) {
     EventReviewTabItemDto dto = new EventReviewTabItemDto();
     dto.reviewId = e.getReviewId();
-    dto.userName = e.getUser().getName();          // ✅ UserEntity 필드명 맞게 수정
+    dto.userName = e.getUser().getName();          //  UserEntity 필드명 맞게 수정
     dto.ratingContent = e.getRatingContent();
     dto.ratingProgress = e.getRatingProgress();
     dto.ratingMood = e.getRatingMood();
