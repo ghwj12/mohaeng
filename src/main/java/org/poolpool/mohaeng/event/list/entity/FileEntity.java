@@ -2,6 +2,8 @@ package org.poolpool.mohaeng.event.list.entity;
 
 import java.time.LocalDateTime;
 
+import org.poolpool.mohaeng.event.participation.entity.ParticipationBoothEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,9 +34,9 @@ public class FileEntity {
     @JoinColumn(name = "event_id")
     private EventEntity event;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "pct_booth_id")
-//    private ParticipationBoothEntity pctBooth; 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pct_booth_id")
+    private ParticipationBoothEntity pctBooth; 
 
     @Column(length = 50)
     private String fileType;

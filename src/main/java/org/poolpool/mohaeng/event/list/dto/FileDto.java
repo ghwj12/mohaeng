@@ -18,7 +18,7 @@ import lombok.Setter;
 public class FileDto {
     private Long fileId;
     private Long eventId;
-//  private Long pctBoothId;
+    private Long pctBoothId;
     private String fileType;
     private String originalFileName;
     private String renameFileName;
@@ -31,7 +31,7 @@ public class FileDto {
         return FileDto.builder()
                 .fileId(entity.getFileId())
                 .eventId(entity.getEvent() != null ? entity.getEvent().getEventId() : null)
-//              .pctBoothId(entity.getPctBooth() != null ? entity.getPctBooth().getPctBoothId() : null)
+                .pctBoothId(entity.getPctBooth() != null ? entity.getPctBooth().getPctBoothId() : null)
                 .fileType(entity.getFileType())
                 .originalFileName(entity.getOriginalFileName())
                 .renameFileName(entity.getRenameFileName())

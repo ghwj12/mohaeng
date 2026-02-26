@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.poolpool.mohaeng.event.participation.dto.EventParticipationDto;
 import org.poolpool.mohaeng.event.participation.dto.ParticipationBoothDto;
 import org.poolpool.mohaeng.event.participation.service.EventParticipationService;
+import org.springframework.http.MediaType; // 💡 임포트 추가
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile; // 💡 임포트 추가
 
 import java.util.List;
 
@@ -23,7 +25,7 @@ public class EventParticipationController {
     // 참여 행사 목록 조회 (유저 기준)
     @GetMapping("/getParticipationList")
     public ResponseEntity<List<EventParticipationDto>> getParticipationList(
-    		@RequestParam("userId") Long userId) {
+            @RequestParam("userId") Long userId) {
 
         return ResponseEntity.ok(service.getParticipationList(userId));
     }
@@ -31,7 +33,7 @@ public class EventParticipationController {
     // 행사 신청 제출(최종)
     @PostMapping("/submitParticipation")
     public ResponseEntity<Long> submitParticipation(
-    		@RequestParam("eventId") Long eventId,
+            @RequestParam("eventId") Long eventId,
             @RequestBody EventParticipationDto dto) {
 
         dto.setEventId(eventId);
@@ -41,7 +43,7 @@ public class EventParticipationController {
     // 참여 취소
     @DeleteMapping("/cancelParticipation")
     public ResponseEntity<Void> cancelParticipation(
-    		@RequestParam("pctId") Long pctId) {
+            @RequestParam("pctId") Long pctId) {
 
         service.cancelParticipation(pctId);
         return ResponseEntity.ok().build();
@@ -55,27 +57,37 @@ public class EventParticipationController {
     // 유저 기준 부스 참여 목록 조회
     @GetMapping("/getParticipationBoothList")
     public ResponseEntity<List<ParticipationBoothDto>> getParticipationBoothList(
-    		@RequestParam("userId") Long userId) {
+            @RequestParam("userId") Long userId) {
 
         return ResponseEntity.ok(service.getParticipationBoothList(userId));
     }
 
-    // 행사 부스 신청 제출(최종)
-    @PostMapping("/submitBoothApply")
-    public ResponseEntity<Long> submitBoothApply(
-    		@RequestParam("eventId") Long eventId,
-            @RequestBody ParticipationBoothDto dto) {
+    // 💡 [추가됨] 행사 부스 신청 임시저장
+    @PostMapping(value = "/saveBoothApplyTemp", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Long> saveBoothApplyTemp(
+            @RequestParam("eventId") Long eventId,
+            @RequestPart("data") ParticipationBoothDto dto, // JSON 폼 데이터
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) { // 파일 데이터
 
-        return ResponseEntity.ok(service.submitBoothApply(eventId, dto));
+        return ResponseEntity.ok(service.saveBoothApplyTemp(eventId, dto, files));
+    }
+
+    // 💡 [수정됨] 행사 부스 신청 제출(최종) - 파일 업로드 가능하게 변경
+    @PostMapping(value = "/submitBoothApply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Long> submitBoothApply(
+            @RequestParam("eventId") Long eventId,
+            @RequestPart("data") ParticipationBoothDto dto, // JSON 폼 데이터
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) { // 파일 데이터
+
+        return ResponseEntity.ok(service.submitBoothApply(eventId, dto, files));
     }
 
     // 행사 부스 참여 취소
     @DeleteMapping("/cancelBoothParticipation")
     public ResponseEntity<Void> cancelBoothParticipation(
-    		@RequestParam("pctBoothId") Long pctBoothId) {
+            @RequestParam("pctBoothId") Long pctBoothId) {
 
         service.cancelBoothParticipation(pctBoothId);
         return ResponseEntity.ok().build();
     }
 }
-
