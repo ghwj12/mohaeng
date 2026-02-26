@@ -1,11 +1,13 @@
 package org.poolpool.mohaeng.event.participation.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.poolpool.mohaeng.auth.security.principal.CustomUserPrincipal;
 import org.poolpool.mohaeng.event.participation.dto.EventParticipationDto;
 import org.poolpool.mohaeng.event.participation.dto.ParticipationBoothDto;
 import org.poolpool.mohaeng.event.participation.service.EventParticipationService;
 import org.springframework.http.MediaType; // 💡 임포트 추가
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile; // 💡 임포트 추가
 
@@ -25,8 +27,9 @@ public class EventParticipationController {
     // 참여 행사 목록 조회 (유저 기준)
     @GetMapping("/getParticipationList")
     public ResponseEntity<List<EventParticipationDto>> getParticipationList(
-            @RequestParam("userId") Long userId) {
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
 
+        Long userId = principal == null ? null : Long.valueOf(principal.getUsername());
         return ResponseEntity.ok(service.getParticipationList(userId));
     }
 
@@ -57,8 +60,9 @@ public class EventParticipationController {
     // 유저 기준 부스 참여 목록 조회
     @GetMapping("/getParticipationBoothList")
     public ResponseEntity<List<ParticipationBoothDto>> getParticipationBoothList(
-            @RequestParam("userId") Long userId) {
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
 
+        Long userId = principal == null ? null : Long.valueOf(principal.getUsername());
         return ResponseEntity.ok(service.getParticipationBoothList(userId));
     }
 

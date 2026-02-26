@@ -3,15 +3,18 @@ package org.poolpool.mohaeng.event.host.controller;
 import java.util.List;
 
 import org.poolpool.mohaeng.event.host.dto.EventCreateDto;
+import org.poolpool.mohaeng.event.host.dto.HostEventMypageResponse;
 import org.poolpool.mohaeng.event.host.service.EventHostService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal; // 💡 중요!
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,5 +64,19 @@ public class EventHostController {
         eventHostService.deleteEvent(eventId, currentUserId);
         
         return ResponseEntity.ok("행사가 성공적으로 삭제(상태 변경)되었습니다.");
+    }
+
+    // ✅ 마이페이지 - 내가 등록한 행사 목록(토큰 기반)
+    @GetMapping("/mine")
+    public ResponseEntity<HostEventMypageResponse> myEvents(
+            @AuthenticationPrincipal String userId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size
+    ) {
+        if (userId == null) {
+            throw new RuntimeException("로그인이 필요합니다.");
+        }
+        Long hostId = Long.parseLong(userId);
+        return ResponseEntity.ok(eventHostService.myEvents(hostId, page, size));
     }
 }

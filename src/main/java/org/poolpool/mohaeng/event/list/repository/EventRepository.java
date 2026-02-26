@@ -10,6 +10,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
+
+    // ✅ 마이페이지: 내가 등록(주최)한 행사 목록
+    Page<EventEntity> findByHost_UserIdAndEventStatusNot(Long userId, String eventStatus, Pageable pageable);
+
     @Query("SELECT e FROM EventEntity e WHERE "
             + "(:keyword IS NULL OR e.title LIKE CONCAT('%', :keyword, '%') OR e.simpleExplain LIKE CONCAT('%', :keyword, '%')) AND "
             + "(:regionId IS NULL OR e.region.regionId BETWEEN :regionMin AND :regionMax) AND "
