@@ -58,12 +58,10 @@ public class ParticipationBoothEntity {
     @Column(name = "UPDATED_AT")
     private LocalDateTime updatedAt;
 
-    @Column(name = "PAYMENT_ID")
-    private Long paymentId;
-
     @PrePersist
     void prePersist() {
         if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.approvedDate == null) this.approvedDate = LocalDateTime.now(); // ✅ 추가
         if (this.status == null) this.status = "신청";
         if (this.boothCount == null) this.boothCount = 1;
         if (this.boothPrice == null) this.boothPrice = 0;
@@ -75,13 +73,15 @@ public class ParticipationBoothEntity {
     void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+    
+    
 
     // getter/setter
-    public Long getPctBoothId() { return pctBoothId; }
-    public void setPctBoothId(Long pctBoothId) { this.pctBoothId = pctBoothId; }
-
     public Long getHostBoothId() { return hostBoothId; }
     public void setHostBoothId(Long hostBoothId) { this.hostBoothId = hostBoothId; }
+    
+    public Long getPctBoothId() { return pctBoothId; }
+    public void setPctBoothId(Long pctBoothId) { this.pctBoothId = pctBoothId; }
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
@@ -124,9 +124,6 @@ public class ParticipationBoothEntity {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
-    public Long getPaymentId() { return paymentId; }
-    public void setPaymentId(Long paymentId) { this.paymentId = paymentId; }
 }
 
 

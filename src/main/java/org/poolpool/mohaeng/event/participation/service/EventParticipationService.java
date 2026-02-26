@@ -23,5 +23,6 @@ public interface EventParticipationService {
     Long submitBoothApply(Long eventId, ParticipationBoothDto dto, List<MultipartFile> files);
 
     void cancelBoothParticipation(Long pctBoothId);
+    
 }
 
