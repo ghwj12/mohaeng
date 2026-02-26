@@ -51,6 +51,17 @@ public class EventParticipationController {
         service.cancelParticipation(pctId);
         return ResponseEntity.ok().build();
     }
+    
+    // 이벤트 정보 불러오기
+    @GetMapping("/info/{eventId}")
+    public ResponseEntity<?> getEventInfo(@PathVariable("eventId") Long eventId) {
+        // 500 에러 방지를 위해 데이터가 없는 경우를 체크해주면 좋습니다.
+        Object detail = service.getEventDetail(eventId);
+        if (detail == null) {
+            return ResponseEntity.status(404).body("행사 정보를 찾을 수 없습니다.");
+        }
+        return ResponseEntity.ok(detail);
+    }
 
 
     // =========================

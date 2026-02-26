@@ -19,7 +19,7 @@ public class EventParticipationEntity {
     private LocalDateTime pctDate;
 
     @Column(name = "PCT_STATUS", nullable = false, length = 20)
-    private String pctStatus; // 임시저장 / 결제대기 / 참여확정(결제완료) / 취소
+    private String pctStatus; 
 
     @Column(name = "USER_ID", nullable = false)
     private Long userId;
@@ -38,6 +38,9 @@ public class EventParticipationEntity {
 
     @Column(name = "PCT_RANK", length = 100)
     private String pctRank;
+    
+    @Column(name = "PCT_AGEGROUP") 
+    private String pctAgeGroup;
 
     @Column(name = "PCT_INTRODUCE", length = 255)
     private String pctIntroduce;
@@ -81,4 +84,12 @@ public class EventParticipationEntity {
 
     public String getPctIntroduce() { return pctIntroduce; }
     public void setPctIntroduce(String pctIntroduce) { this.pctIntroduce = pctIntroduce; }
+    
+    public void setPctAgeGroup(String pctAgeGroup) {
+        this.pctAgeGroup = pctAgeGroup;
+    }
+
+    public String getPctAgeGroup() {
+        return this.pctAgeGroup;
+    }
 }

@@ -9,9 +9,11 @@ import java.util.List;
 import org.poolpool.mohaeng.common.config.UploadProperties;
 import org.poolpool.mohaeng.common.util.FileNameChange;
 import org.poolpool.mohaeng.event.host.repository.FileRepository;
+import org.poolpool.mohaeng.event.list.dto.EventDetailDto;
 import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.list.entity.FileEntity;
 import org.poolpool.mohaeng.event.list.repository.EventRepository;
+import org.poolpool.mohaeng.event.list.service.EventService;
 import org.poolpool.mohaeng.event.participation.dto.EventParticipationDto;
 import org.poolpool.mohaeng.event.participation.dto.ParticipationBoothDto;
 import org.poolpool.mohaeng.event.participation.dto.ParticipationBoothFacilityDto;
@@ -35,6 +37,7 @@ public class EventParticipationServiceImpl implements EventParticipationService 
     private final FileRepository fileRepository; // 💡 공통 파일 리포지토리 주입
     private final UploadProperties uploadProperties;
     private final EventRepository eventRepository;
+    private final EventService eventService;
     
     private Long getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -68,10 +71,21 @@ public class EventParticipationServiceImpl implements EventParticipationService 
     @Override
     @Transactional
     public Long submitParticipation(EventParticipationDto dto) {
+        // 요청 3번: 이름, 연락처, 이메일 등은 시큐리티 컨텍스트 유저 ID로 세팅
+        Long userId = getCurrentUserId();
+        dto.setUserId(userId);
+        
         EventParticipationEntity e = dto.toEntity();
-        e.setPctStatus("결제대기");
+        e.setPctStatus("참여확정");
         EventParticipationEntity saved = repo.saveParticipation(e);
         return saved.getPctId();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public EventDetailDto getEventDetail(Long eventId) {
+        // 기존 EventController에서 사용하던 상세조회 로직 호출 (조회수는 올리지 않음)
+        return eventService.getEventDetail(eventId, false);
     }
 
     @Override
