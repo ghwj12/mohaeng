@@ -51,8 +51,8 @@ public class EventWishlistServiceImpl implements EventWishlistService {
     }
 
     @Override
-    public long add(long userId, WishlistCreateRequestDto request) {
-        long eventId = request.getEventId();
+    public long add(Long userId, WishlistCreateRequestDto request) {
+        Long eventId = request.getEventId();
 
         if (wishlistRepository.existsByUserIdAndEventId(userId, eventId)) {
             throw new WishlistAlreadyExistsException(userId, eventId);

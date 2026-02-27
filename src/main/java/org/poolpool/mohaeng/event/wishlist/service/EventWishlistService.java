@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface EventWishlistService {
     PageResponse<WishlistItemDto> getList(long userId, Pageable pageable);
-    long add(long userId, WishlistCreateRequestDto request);
+    long add(Long userId, WishlistCreateRequestDto request);
     void remove(long userId, long wishId);
     WishlistItemDto toggleNotification(long userId, long wishId, WishlistToggleRequestDto request);
 }

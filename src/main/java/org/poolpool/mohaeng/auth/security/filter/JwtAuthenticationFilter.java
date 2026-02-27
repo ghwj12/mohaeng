@@ -57,12 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (HttpMethod.GET.matches(method) && uri.startsWith("/api/events")) {
             return true;
         }
-
-        // 4) permitAll API (POST)
-        if (HttpMethod.POST.matches(method) && (uri.startsWith("/api/user"))) {
-            return true;
-        }
-
+      
         return false;
     }
 
