@@ -3,8 +3,10 @@ package org.poolpool.mohaeng.admin.eventStats.controller;
 import lombok.RequiredArgsConstructor;
 import org.poolpool.mohaeng.admin.eventStats.dto.AdminEventStatsDto;
 import org.poolpool.mohaeng.admin.eventStats.service.AdminEventStatsService;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -13,43 +15,52 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/eventstats")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminEventStatsController {
 
     private final AdminEventStatsService service;
 
-    // 1. 전체 행사 분석 조회
-    @GetMapping("/getAllEvent")
-    public ResponseEntity<List<AdminEventStatsDto.EventListResponse>> getAllEvent(
-            // 👇 여기에 name = "..." 을 추가했습니다! 👇
-            @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(name = "category", required = false) String category,
-            @RequestParam(name = "location", required = false) String location,
-            @RequestParam(name = "status", required = false) String status
+    // ── 행사 목록 (페이징 + 필터) ──
+    // GET /api/admin/eventstats/events?keyword=&categoryId=&status=&regionId=&startDate=&endDate=&checkFree=&hideClosed=&page=0&size=10
+    @GetMapping("/events")
+    public ResponseEntity<Page<AdminEventStatsDto.EventListResponse>> getEventList(
+        @RequestParam(name = "keyword", required = false) String keyword,
+        @RequestParam(name = "categoryId", required = false) Integer categoryId,
+        @RequestParam(name = "status", required = false) String status,
+        @RequestParam(name = "regionId", required = false) Long regionId,
+        @RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+        @RequestParam(name = "checkFree", defaultValue = "false") boolean checkFree,
+        @RequestParam(name = "hideClosed", defaultValue = "false") boolean hideClosed,
+        @RequestParam(name = "page", defaultValue = "0") int page,
+        @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(service.getAllEvent(startDate, endDate, category, location, status));
+        return ResponseEntity.ok(service.getAllEvent(
+            keyword, categoryId, status, regionId,
+            startDate, endDate, checkFree, hideClosed, page, size
+        ));
     }
 
-    // 2. 월별 행사 수 조회
-    @GetMapping("/getEventCountByMonth")
-    public ResponseEntity<List<AdminEventStatsDto.MonthlyStatsResponse>> getEventCountByMonth(
-            // 👇 여기도 name = "year" 를 추가했습니다! 👇
-            @RequestParam(name = "year", defaultValue = "2026") int year
-    ) {
-        return ResponseEntity.ok(service.getEventCountByMonth(year));
-    }
-
-    // 3. 카테고리 행사 수 조회
-    @GetMapping("/getEventCountByCategory")
-    public ResponseEntity<List<AdminEventStatsDto.CategoryStatsResponse>> getEventCountByCategory() {
-        return ResponseEntity.ok(service.getEventCountByCategory());
-    }
-    
-    // 4. 단일 행사 분석 조회
-    @GetMapping("/getEventAnalysis/{eventId}")
+    // ── 단일 행사 상세 분석 ──
+    @GetMapping("/events/{eventId}/analysis")
     public ResponseEntity<AdminEventStatsDto.EventAnalysisDetailResponse> getEventAnalysis(
-            @PathVariable(name = "eventId") Long eventId
+        @PathVariable("eventId") Long eventId
     ) {
         return ResponseEntity.ok(service.getEventAnalysis(eventId));
+    }
+
+    // ── 월별 통계 ──
+    @GetMapping("/monthly")
+    public ResponseEntity<List<AdminEventStatsDto.MonthlyStatsResponse>> getMonthlyStats(
+        @RequestParam(name = "year", required = false) Integer year
+    ) {
+        int targetYear = (year != null) ? year : LocalDate.now().getYear();
+        return ResponseEntity.ok(service.getEventCountByMonth(targetYear));
+    }
+
+    // ── 카테고리별 통계 ──
+    @GetMapping("/category")
+    public ResponseEntity<List<AdminEventStatsDto.CategoryStatsResponse>> getCategoryStats() {
+        return ResponseEntity.ok(service.getEventCountByCategory());
     }
 }

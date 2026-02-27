@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.UUID;
 
+import org.poolpool.mohaeng.event.participation.entity.EventParticipationEntity;
 import org.poolpool.mohaeng.event.participation.repository.EventParticipationRepository;
 import org.poolpool.mohaeng.payment.dto.PaymentDto;
 import org.poolpool.mohaeng.payment.entity.PaymentEntity;
@@ -45,24 +46,29 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentDto.PrepareResponse prepare(Long userId, PaymentDto.PrepareRequest req) {
 
-        // pctBoothId로 eventId 조회 (혹은 req에서 직접 받음)
-        String orderId = "BOOTH-" + req.getPctBoothId() + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        // ✅ 일반 참여(PCT)와 부스(BOOTH) 구분
+        boolean isBooth = req.getPctBoothId() != null;
+        String payType = isBooth ? "BOOTH" : "PCT";
 
-        // READY 상태로 결제 레코드 미리 생성
+        String prefix   = isBooth ? "BOOTH-" + req.getPctBoothId() : "PCT-" + req.getPctId();
+        String orderId  = prefix + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+        // READY 상태로 결제 레코드 생성
         PaymentEntity payment = PaymentEntity.builder()
                 .userId(userId)
                 .eventId(req.getEventId())
-                .pctBoothId(req.getPctBoothId())
-                .payType("BOOTH")
+                .pctBoothId(req.getPctBoothId())   // 부스 결제 시 세팅
+                .pctId(req.getPctId())              // ✅ 일반 참여 결제 시 세팅 (PaymentEntity에 pctId 필드 필요)
+                .payType(payType)
                 .paymentKey(orderId)
-                .payMethod("UNKNOWN") // 승인 후 업데이트
+                .payMethod("UNKNOWN")
                 .amountTotal(req.getAmount())
                 .paymentStatus("READY")
                 .build();
 
         paymentRepository.save(payment);
 
-        log.info("[결제 준비] orderId={}, userId={}, amount={}", orderId, userId, req.getAmount());
+        log.info("[결제 준비] orderId={}, userId={}, payType={}, amount={}", orderId, userId, payType, req.getAmount());
 
         return PaymentDto.PrepareResponse.builder()
                 .orderId(orderId)
@@ -96,7 +102,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setApprovedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // 5. 부스 신청 상태 업데이트 (신청 → 결제완료)
+        // 5-A. 부스 참여 상태 → 결제완료
         if (payment.getPctBoothId() != null) {
             participationRepository.findBoothById(payment.getPctBoothId())
                     .ifPresent(booth -> {
@@ -105,7 +111,16 @@ public class PaymentServiceImpl implements PaymentService {
                     });
         }
 
-        log.info("[결제 승인 완료] orderId={}, paymentKey={}", req.getOrderId(), req.getPaymentKey());
+        // 5-B. ✅ 일반 행사 참여 상태 → 결제완료 (통계에 반영됨)
+        if (payment.getPctId() != null) {
+            participationRepository.findParticipationById(payment.getPctId())
+                    .ifPresent(pct -> {
+                        pct.setPctStatus("결제완료");
+                        participationRepository.saveParticipation(pct);
+                    });
+        }
+
+        log.info("[결제 승인 완료] orderId={}, paymentKey={}, payType={}", req.getOrderId(), req.getPaymentKey(), payment.getPayType());
 
         return PaymentDto.ConfirmResponse.builder()
                 .paymentId(payment.getPaymentId())
@@ -120,7 +135,6 @@ public class PaymentServiceImpl implements PaymentService {
     // ─── 토스 서버 승인 API 호출 ───
     private TossConfirmResult callTossConfirmAPI(String paymentKey, String orderId, Integer amount) {
         try {
-            // Base64 인코딩: secretKey + ":" (토스 공식 방식)
             String encoded = Base64.getEncoder()
                     .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
 
@@ -146,10 +160,10 @@ public class PaymentServiceImpl implements PaymentService {
             }
 
             JsonNode json = objectMapper.readTree(response.body());
-            String method = json.path("method").asText("UNKNOWN");
-            String orderName = json.path("orderName").asText("");
-
-            return new TossConfirmResult(method, orderName);
+            return new TossConfirmResult(
+                    json.path("method").asText("UNKNOWN"),
+                    json.path("orderName").asText("")
+            );
 
         } catch (RuntimeException e) {
             throw e;
@@ -158,6 +172,5 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    // 내부 결과 클래스
     private record TossConfirmResult(String method, String orderName) {}
 }
