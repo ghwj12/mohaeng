@@ -11,15 +11,11 @@ public interface EventParticipationService {
 
     List<EventParticipationDto> getParticipationList(Long userId);
 
-    Long saveParticipationTemp(EventParticipationDto dto);
-
     Long submitParticipation(EventParticipationDto dto);
 
     void cancelParticipation(Long pctId);
 
     List<ParticipationBoothDto> getParticipationBoothList(Long userId);
-
-    Long saveBoothApplyTemp(Long eventId, ParticipationBoothDto dto, List<MultipartFile> files);
 
     Long submitBoothApply(Long eventId, ParticipationBoothDto dto, List<MultipartFile> files);
 

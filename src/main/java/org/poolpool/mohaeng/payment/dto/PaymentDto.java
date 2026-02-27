@@ -5,49 +5,35 @@ import java.time.LocalDateTime;
 
 public class PaymentDto {
 
-    // ─── 결제 준비 요청 (프론트 → 백엔드) ───
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
+    // ─── 결제 준비 요청 ───
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class PrepareRequest {
-        private Long pctBoothId;
+        private Long pctBoothId;  // 부스 참여 결제용
+        private Long pctId;       // ✅ 일반 행사 참여 결제용 (추가)
         private Long eventId;
         private Integer amount;
-        private String orderName; // 예: "모행 부스 참가비"
+        private String orderName;
     }
 
-    // ─── 결제 준비 응답 (백엔드 → 프론트) ───
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
+    // ─── 결제 준비 응답 ───
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class PrepareResponse {
-        private String orderId;      // 내부 주문 ID (토스에 전달)
+        private String orderId;
         private String orderName;
         private Integer amount;
-        private String clientKey;    // 토스 클라이언트 키 (프론트에서 SDK 초기화용)
+        private String clientKey;
     }
 
-    // ─── 결제 승인 요청 (프론트 → 백엔드) ───
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
+    // ─── 결제 승인 요청 ───
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor
     public static class ConfirmRequest {
-        private String paymentKey;   // 토스 결제 키
-        private String orderId;      // 내부 주문 ID
-        private Integer amount;      // 결제 금액 (검증용)
+        private String paymentKey;
+        private String orderId;
+        private Integer amount;
     }
 
-    // ─── 결제 승인 응답 (백엔드 → 프론트) ───
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
+    // ─── 결제 승인 응답 ───
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class ConfirmResponse {
         private Long paymentId;
         private String paymentNo;

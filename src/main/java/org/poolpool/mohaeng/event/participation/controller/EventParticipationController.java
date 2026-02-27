@@ -77,15 +77,6 @@ public class EventParticipationController {
         return ResponseEntity.ok(service.getParticipationBoothList(userId));
     }
 
-    // 💡 [추가됨] 행사 부스 신청 임시저장
-    @PostMapping(value = "/saveBoothApplyTemp", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Long> saveBoothApplyTemp(
-            @RequestParam("eventId") Long eventId,
-            @RequestPart("data") ParticipationBoothDto dto, // JSON 폼 데이터
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) { // 파일 데이터
-
-        return ResponseEntity.ok(service.saveBoothApplyTemp(eventId, dto, files));
-    }
 
     // 💡 [수정됨] 행사 부스 신청 제출(최종) - 파일 업로드 가능하게 변경
     @PostMapping(value = "/submitBoothApply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

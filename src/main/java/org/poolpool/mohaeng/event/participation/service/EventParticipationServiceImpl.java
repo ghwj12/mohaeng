@@ -32,13 +32,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EventParticipationServiceImpl implements EventParticipationService {
 
-
     private final EventParticipationRepository repo;
-    private final FileRepository fileRepository; // 💡 공통 파일 리포지토리 주입
+    private final FileRepository fileRepository;
     private final UploadProperties uploadProperties;
     private final EventRepository eventRepository;
     private final EventService eventService;
-    
+
     private Long getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof String) {
@@ -46,7 +45,7 @@ public class EventParticipationServiceImpl implements EventParticipationService 
         }
         throw new IllegalStateException("인증 정보를 찾을 수 없습니다.");
     }
-    
+
     // =========================
     // 행사 참여(신청)
     // =========================
@@ -59,32 +58,34 @@ public class EventParticipationServiceImpl implements EventParticipationService 
                 .toList();
     }
 
+    /**
+     * 행사 참가 신청 제출
+     * - 무료 행사: 바로 '결제완료' (통계에 즉시 반영)
+     * - 유료 행사: '결제대기' → 결제 승인 후 PaymentService에서 '결제완료'로 업데이트
+     */
     @Override
     @Transactional
-    public Long saveParticipationTemp(EventParticipationDto dto) {
+    public Long submitParticipation(EventParticipationDto dto) {
+        Long userId = getCurrentUserId();
+        dto.setUserId(userId);
+
+        // 행사 가격 확인
+        EventEntity event = eventRepository.findById(dto.getEventId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 행사입니다."));
+
         EventParticipationEntity e = dto.toEntity();
-        e.setPctStatus("임시저장");
+
+        boolean isFree = (event.getPrice() == null || event.getPrice() == 0);
+        // 무료: 결제완료 / 유료: 결제대기 (결제 성공 시 PaymentService가 결제완료로 변경)
+        e.setPctStatus(isFree ? "결제완료" : "결제대기");
+
         EventParticipationEntity saved = repo.saveParticipation(e);
         return saved.getPctId();
     }
 
     @Override
-    @Transactional
-    public Long submitParticipation(EventParticipationDto dto) {
-        // 요청 3번: 이름, 연락처, 이메일 등은 시큐리티 컨텍스트 유저 ID로 세팅
-        Long userId = getCurrentUserId();
-        dto.setUserId(userId);
-        
-        EventParticipationEntity e = dto.toEntity();
-        e.setPctStatus("참여확정");
-        EventParticipationEntity saved = repo.saveParticipation(e);
-        return saved.getPctId();
-    }
-    
-    @Override
     @Transactional(readOnly = true)
     public EventDetailDto getEventDetail(Long eventId) {
-        // 기존 EventController에서 사용하던 상세조회 로직 호출 (조회수는 올리지 않음)
         return eventService.getEventDetail(eventId, false);
     }
 
@@ -111,36 +112,6 @@ public class EventParticipationServiceImpl implements EventParticipationService 
 
     @Override
     @Transactional
-    public Long saveBoothApplyTemp(Long eventId, ParticipationBoothDto dto, List<MultipartFile> files) { // 💡 파라미터 추가!
-        
-        // 1. 이벤트 검증
-        validateEventId(eventId, dto.getHostBoothId());
-
-        // 2. 부스 임시저장 정보 세팅
-        ParticipationBoothEntity booth = dto.toEntity();
-        booth.setStatus("임시저장");
-        ParticipationBoothEntity savedBooth = repo.saveBooth(booth);
-
-        // 3. 부대시설 저장
-        saveFacilities(savedBooth.getPctBoothId(), dto.getFacilities());
-        
-        // 4. 첨부파일 저장 (방금 만든 로직)
-        saveFiles(savedBooth, files, eventId);
-
-        return savedBooth.getPctBoothId();
-    }
-    
-    private void validateEventId(Long eventId, Long hostBoothId) {
-        Long realEventId = repo.findEventIdByHostBoothId(hostBoothId)
-                .orElseThrow(() -> new IllegalArgumentException("HOST_BOOTH 없음"));
-        
-        if (!realEventId.equals(eventId)) {
-            throw new IllegalArgumentException("hostBoothId가 eventId에 속하지 않습니다.");
-        }
-    }
-
-    @Override
-    @Transactional
     public void cancelBoothParticipation(Long pctBoothId) {
         ParticipationBoothEntity booth = repo.findBoothById(pctBoothId)
                 .orElseThrow(() -> new IllegalArgumentException("부스 신청 없음"));
@@ -148,16 +119,26 @@ public class EventParticipationServiceImpl implements EventParticipationService 
         booth.setUpdatedAt(LocalDateTime.now());
         repo.saveBooth(booth);
     }
-    
+
+    /**
+     * 부스 참가 신청 제출
+     * - 무료(boothPrice=0): 바로 '결제완료'
+     * - 유료: '신청' → 결제 승인 후 PaymentService에서 '결제완료'로 변경
+     */
     @Override
     @Transactional
     public Long submitBoothApply(Long eventId, ParticipationBoothDto dto, List<MultipartFile> files) {
         validateEventId(eventId, dto.getHostBoothId());
 
         ParticipationBoothEntity booth = dto.toEntity();
-        booth.setStatus("신청");
         Long userId = getCurrentUserId();
         booth.setUserId(userId);
+
+        // 부스 가격 확인 (무료면 바로 결제완료)
+        boolean isFree = (dto.getBoothPrice() == null || dto.getBoothPrice() == 0)
+                      && (dto.getTotalPrice() == null || dto.getTotalPrice() == 0);
+        booth.setStatus(isFree ? "결제완료" : "신청");
+
         ParticipationBoothEntity savedBooth = repo.saveBooth(booth);
 
         saveFacilities(savedBooth.getPctBoothId(), dto.getFacilities());
@@ -166,7 +147,7 @@ public class EventParticipationServiceImpl implements EventParticipationService 
         // 부스 잔여수량 차감
         repo.decreaseBoothRemainCount(dto.getHostBoothId());
 
-        // ✅ 부대시설 잔여수량 차감
+        // 부대시설 잔여수량 차감
         if (dto.getFacilities() != null) {
             for (ParticipationBoothFacilityDto faci : dto.getFacilities()) {
                 repo.decreaseFacilityRemainCount(faci.getHostBoothFaciId(), faci.getFaciCount());
@@ -175,11 +156,22 @@ public class EventParticipationServiceImpl implements EventParticipationService 
 
         return savedBooth.getPctBoothId();
     }
-    
+
+    // =========================
+    // 내부 유틸
+    // =========================
+    private void validateEventId(Long eventId, Long hostBoothId) {
+        Long realEventId = repo.findEventIdByHostBoothId(hostBoothId)
+                .orElseThrow(() -> new IllegalArgumentException("HOST_BOOTH 없음"));
+        if (!realEventId.equals(eventId)) {
+            throw new IllegalArgumentException("hostBoothId가 eventId에 속하지 않습니다.");
+        }
+    }
+
     private void saveFiles(ParticipationBoothEntity pctBooth, List<MultipartFile> files, Long eventId) {
         if (files == null || files.isEmpty()) return;
 
-        Path pboothDir = uploadProperties.pboothDir(); // C:/upload_files/pbooth
+        Path pboothDir = uploadProperties.pboothDir();
 
         try {
             if (!Files.exists(pboothDir)) {
@@ -191,30 +183,25 @@ public class EventParticipationServiceImpl implements EventParticipationService 
                 if (file.isEmpty()) continue;
 
                 String originalName = file.getOriginalFilename();
-                
-                // 유틸리티를 사용해 파일명 안전하게 변경
                 String renameName = FileNameChange.change(originalName, FileNameChange.RenameStrategy.DATETIME_UUID);
                 Path filePath = pboothDir.resolve(renameName);
 
                 EventEntity event = eventRepository.findById(eventId)
                         .orElseThrow(() -> new IllegalArgumentException("행사 없음"));
-                
-                // 1. 물리적 파일 저장
+
                 file.transferTo(filePath.toFile());
 
-                // 2. 공통 FileEntity를 활용해 DB에 기록
                 FileEntity fileEntity = FileEntity.builder()
                         .pctBooth(pctBooth)
-                        .event(event) // 부스 참여 엔티티와 연관관계 맺기
-                        .fileType("P_BOOTH")     // 파일 타입 구분
+                        .event(event)
+                        .fileType("P_BOOTH")
                         .originalFileName(originalName)
                         .renameFileName(renameName)
-                        .sortOrder(i + 1)        // 파일 순서
+                        .sortOrder(i + 1)
                         .createdAt(LocalDateTime.now())
                         .build();
 
-                // 기존 FileRepository를 통해 저장
-                fileRepository.save(fileEntity); 
+                fileRepository.save(fileEntity);
             }
         } catch (IOException e) {
             throw new RuntimeException("참여 부스 첨부파일 업로드 중 오류가 발생했습니다.", e);
@@ -223,7 +210,6 @@ public class EventParticipationServiceImpl implements EventParticipationService 
 
     private void saveFacilities(Long pctBoothId, List<ParticipationBoothFacilityDto> facilities) {
         repo.deleteFacilitiesByPctBoothId(pctBoothId);
-
         if (facilities == null || facilities.isEmpty()) return;
 
         List<ParticipationBoothFacilityEntity> entities = facilities.stream()
@@ -233,4 +219,3 @@ public class EventParticipationServiceImpl implements EventParticipationService 
         repo.saveFacilities(entities);
     }
 }
-
