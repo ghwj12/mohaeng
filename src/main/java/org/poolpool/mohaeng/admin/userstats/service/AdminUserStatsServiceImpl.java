@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.poolpool.mohaeng.admin.userstats.dto.UserStatsDto;
@@ -18,91 +19,73 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AdminUserStatsServiceImpl implements AdminUserStatsService{
+public class AdminUserStatsServiceImpl implements AdminUserStatsService {
 
-	private final AdminUserStatsRepository adminUserStatsRepository;
+    private final AdminUserStatsRepository adminUserStatsRepository;
 
-	//오늘 방문자 수, 개인 회원 수, 기업 회원 수, 휴면계정 수 조회
-	@Override
-	public UserStatsDto getDashboardStats() {
-		return adminUserStatsRepository.findUserDashboardStats(LocalDate.now());
-	}
+    @Override
+    public UserStatsDto getDashboardStats() {
+        return adminUserStatsRepository.findUserDashboardStats(LocalDate.now());
+    }
 
-	//최근 6개월 월별 누적 회원 수 조회
-	@Override
-	public List<UserStatsDto> findMonthlyUsers() {
-		LocalDate now = LocalDate.now();
-		
-		//6개월 전 월
-		LocalDateTime sixMonthsAgo = now.minusMonths(5).withDayOfMonth(1).atStartOfDay();
-		//최근 6개월 월별 회원 수 조회
-		List<UserStatsDto> monthlyUsers = adminUserStatsRepository.findMonthlyUsers(sixMonthsAgo);
-		
-		//조회 결과 Map으로 변환
-	    Map<String, Long> resultMap = monthlyUsers.stream()
-	            .collect(Collectors.toMap(
-	                    UserStatsDto::getPeriod,
-	                    UserStatsDto::getUserCount));
+    @Override
+    public List<UserStatsDto> findMonthlyUsers() {
+        LocalDate now = LocalDate.now();
+        LocalDateTime sixMonthsAgo = now.minusMonths(5).withDayOfMonth(1).atStartOfDay();
+        List<UserStatsDto> monthlyUsers = adminUserStatsRepository.findMonthlyUsers(sixMonthsAgo);
 
-	    List<UserStatsDto> accMonthlyUsers = new ArrayList<>();
-	    long cumulativeUser = 0;
+        Map<String, Long> resultMap = monthlyUsers.stream()
+                .collect(Collectors.toMap(UserStatsDto::getPeriod, UserStatsDto::getUserCount));
 
-	    //최근 6개월 강제 생성
-	    for (int i = 5; i >= 0; i--) {
+        List<UserStatsDto> acc = new ArrayList<>();
+        long cumulative = 0;
+        for (int i = 5; i >= 0; i--) {
+            String period = now.minusMonths(i).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            cumulative += resultMap.getOrDefault(period, 0L);
+            acc.add(new UserStatsDto(period, cumulative));
+        }
+        return acc;
+    }
 
-	        LocalDate targetMonth = now.minusMonths(i);
-	        String period = targetMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+    @Override
+    public List<UserStatsDto> getDormantHandle() {
+        LocalDate now = LocalDate.now();
+        LocalDateTime sixMonthsAgo = now.minusMonths(5).withDayOfMonth(1).atStartOfDay();
 
-	        Long count = resultMap.getOrDefault(period, 0L);
-	        //회원 수 누적
-	        cumulativeUser += count;
-	        accMonthlyUsers.add(new UserStatsDto(period, cumulativeUser));
-	    }
+        Map<String, Long> notifiedMap = adminUserStatsRepository.findMonthlyDormantNotified(sixMonthsAgo)
+                .stream().collect(Collectors.toMap(UserStatsDto::getPeriod, UserStatsDto::getDormantNotifiedCount));
+        Map<String, Long> withdrawnMap = adminUserStatsRepository.findMonthlyDormantWithdrawn(sixMonthsAgo)
+                .stream().collect(Collectors.toMap(UserStatsDto::getPeriod, UserStatsDto::getDormantWithdrawnCount));
 
-	    return accMonthlyUsers;
-		
-	}
+        List<UserStatsDto> result = new ArrayList<>();
+        for (int i = 5; i >= 0; i--) {
+            String period = now.minusMonths(i).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            result.add(new UserStatsDto(period,
+                    notifiedMap.getOrDefault(period, 0L),
+                    withdrawnMap.getOrDefault(period, 0L)));
+        }
+        return result;
+    }
 
-	//최근 6개월 휴면 계정 조치 동향 조회
-	@Override
-	public List<UserStatsDto> getDormantHandle() {
-		LocalDate now = LocalDate.now();
-		
-		//6개월 전 월
-		LocalDateTime sixMonthsAgo = now.minusMonths(5).withDayOfMonth(1).atStartOfDay();
-		
-		//안내 메일 전송 수 조회
-		List<UserStatsDto> monthlyDormantNotified = adminUserStatsRepository.findMonthlyDormantNotified(sixMonthsAgo);
-		//탈퇴 처리 수 조회
-		List<UserStatsDto> monthlyDormantWithdrawn = adminUserStatsRepository.findMonthlyDormantWithdrawn(sixMonthsAgo);
-		
-		//조회 결과 Map으로 변환
-		Map<String, Long> notifiedMap =	monthlyDormantNotified.stream()
-	                    .collect(Collectors.toMap(
-	                            UserStatsDto::getPeriod,
-	                            UserStatsDto::getDormantNotifiedCount));
+    // ✅ 선택한 년/월의 일별 조치 동향 - 두 쿼리 결과를 날짜 기준으로 합산
+    @Override
+    public List<UserStatsDto> getDormantHandleByMonth(int year, String month) {
+        String yearMonth = year + "-" + month; // "2026-02"
 
-	    Map<String, Long> withdrawnMap = monthlyDormantWithdrawn.stream()
-	                    .collect(Collectors.toMap(
-	                            UserStatsDto::getPeriod,
-	                            UserStatsDto::getDormantWithdrawnCount));
-		
-	    List<UserStatsDto> result = new ArrayList<>();
+        Map<String, Long> notifiedMap = adminUserStatsRepository.findDailyDormantNotified(yearMonth)
+                .stream().collect(Collectors.toMap(UserStatsDto::getPeriod, UserStatsDto::getDormantNotifiedCount));
+        Map<String, Long> withdrawnMap = adminUserStatsRepository.findDailyDormantWithdrawn(yearMonth)
+                .stream().collect(Collectors.toMap(UserStatsDto::getPeriod, UserStatsDto::getDormantWithdrawnCount));
 
-	    //최근 6개월 강제 생성
-	    for (int i = 5; i >= 0; i--) {
+        // 두 Map의 날짜 키를 합쳐서 정렬
+        TreeMap<String, UserStatsDto> merged = new TreeMap<>();
+        notifiedMap.forEach((day, cnt) ->
+            merged.computeIfAbsent(day, d -> new UserStatsDto(d, 0L, 0L))
+                  .setDormantNotifiedCount(cnt));
+        withdrawnMap.forEach((day, cnt) ->
+            merged.computeIfAbsent(day, d -> new UserStatsDto(d, 0L, 0L))
+                  .setDormantWithdrawnCount(cnt));
 
-	        LocalDate target = now.minusMonths(i);
-	        String period = target.format(
-	                DateTimeFormatter.ofPattern("yyyy-MM"));
-
-	        Long notified = notifiedMap.getOrDefault(period, 0L);
-	        Long withdrawn = withdrawnMap.getOrDefault(period, 0L);
-	        
-	        result.add(new UserStatsDto(period, notified, withdrawn));
-	    }
-	    
-		return result;
-	}
-	
+        return new ArrayList<>(merged.values());
+    }
 }

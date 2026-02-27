@@ -10,6 +10,7 @@ import org.poolpool.mohaeng.common.api.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -21,25 +22,29 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AdminUserStatsController {
 
-	private final AdminUserStatsService adminUserStatsService;
-	
-	//운영 통계 조회
-	@GetMapping("/getOperateStats")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getOperateStats() {
-		//오늘 방문자 수, 개인 회원 수, 기업 회원 수, 휴면계정 수 조회
-		UserStatsDto dashboardStats = adminUserStatsService.getDashboardStats();
-		//최근 6개월 월별 누적 회원 수 조회
-		List<UserStatsDto> monthlyUsers = adminUserStatsService.findMonthlyUsers();
-		//최근 6개월 휴면계정 조치 동향 조회
-		List<UserStatsDto> monthlyDormantHandle = adminUserStatsService.getDormantHandle();
-		
-		Map<String, Object> map = new HashMap<>();
+    private final AdminUserStatsService adminUserStatsService;
 
-		map.put("dashboardStats", dashboardStats);
-		map.put("monthlyUsers", monthlyUsers);
-		map.put("monthlyDormantHandle", monthlyDormantHandle);
-        
+    // 운영 통계 조회 (대시보드 + 월별 회원 수 + 6개월 휴면 동향)
+    @GetMapping("/getOperateStats")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getOperateStats() {
+        UserStatsDto dashboardStats        = adminUserStatsService.getDashboardStats();
+        List<UserStatsDto> monthlyUsers    = adminUserStatsService.findMonthlyUsers();
+        List<UserStatsDto> monthlyDormant  = adminUserStatsService.getDormantHandle();
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("dashboardStats",        dashboardStats);
+        map.put("monthlyUsers",          monthlyUsers);
+        map.put("monthlyDormantHandle",  monthlyDormant);
+
         return ResponseEntity.ok(ApiResponse.ok("운영 통계 조회 완료", map));
     }
-	
+
+    // ✅ 선택한 년/월의 일별 휴면계정 조치 동향 조회
+    @GetMapping("/getDormantHandleByMonth")
+    public ResponseEntity<ApiResponse<List<UserStatsDto>>> getDormantHandleByMonth(
+            @RequestParam(name = "year") int year,
+            @RequestParam(name = "month") String month) {
+        List<UserStatsDto> result = adminUserStatsService.getDormantHandleByMonth(year, month);
+        return ResponseEntity.ok(ApiResponse.ok("일별 휴면 조치 조회 완료", result));
+    }
 }
