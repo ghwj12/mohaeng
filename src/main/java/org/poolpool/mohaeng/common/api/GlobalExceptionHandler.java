@@ -59,6 +59,23 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail("요청한 경로 또는 리소스를 찾을 수 없습니다.", e.getMessage()));
     }
 
+    
+    // ✅ 비즈니스 로직/검증 실패: 400으로 내려서 프론트에서 메시지 처리 가능하게
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<ApiResponse<String>> handleIllegalState(RuntimeException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(e.getMessage(), null));
+    }
+
+    // ✅ 권한/소유자 불일치: 403
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ApiResponse<String>> handleSecurity(SecurityException e) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.fail(e.getMessage(), null));
+    }
+
     // 최후의 보루: 진짜 알 수 없는 서버 에러들만 여기서 잡음
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<String>> handleAny(Exception e) {

@@ -11,8 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -81,7 +83,19 @@ public class MypageEventController {
         return ResponseEntity.ok(mypageEventService.getMyCreatedEvents(uid, page, size));
     }
 
+    
     /**
+     * ✅ 마이페이지 - 행사 등록 내역 소프트 삭제
+     * - 행사예정/행사종료(날짜 기준)만 삭제 허용
+     * - 삭제 시 DB eventStatus = 'DELETED'
+     */
+    @PutMapping("/created/{eventId}/delete")
+    public ResponseEntity<Void> deleteMyCreatedEvent(@PathVariable("eventId") Long eventId) {
+        Long uid = currentUserId();
+        mypageEventService.deleteMyCreatedEvent(uid, eventId);
+        return ResponseEntity.ok().build();
+    }
+/**
      * ✅ 마이페이지 - 행사 참여 내역(부스 제외)
      * - 부스는 별도 탭(부스 관리)에서 노출한다고 해서 여기서는 제외
      */

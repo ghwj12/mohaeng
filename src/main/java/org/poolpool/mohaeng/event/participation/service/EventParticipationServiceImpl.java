@@ -21,7 +21,9 @@ import org.poolpool.mohaeng.event.participation.entity.EventParticipationEntity;
 import org.poolpool.mohaeng.event.participation.entity.ParticipationBoothEntity;
 import org.poolpool.mohaeng.event.participation.entity.ParticipationBoothFacilityEntity;
 import org.poolpool.mohaeng.event.participation.repository.EventParticipationRepository;
+import org.poolpool.mohaeng.auth.security.principal.CustomUserPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,10 +43,19 @@ public class EventParticipationServiceImpl implements EventParticipationService 
     
     private Long getCurrentUserId() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof String) {
-            return Long.parseLong((String) principal);
+
+        // ✅ 프로젝트 전반에서 principal 타입이 섞여서 들어오는 케이스 방어
+        if (principal instanceof CustomUserPrincipal cup) {
+            return Long.parseLong(cup.getUserId());
         }
-        throw new IllegalStateException("인증 정보를 찾을 수 없습니다.");
+        if (principal instanceof UserDetails ud) {
+            return Long.parseLong(ud.getUsername());
+        }
+        if (principal instanceof String s) {
+            return Long.parseLong(s);
+        }
+
+        throw new IllegalStateException("인증 정보를 찾을 수 없습니다. principal=" + principal);
     }
     
     // =========================
@@ -94,6 +105,30 @@ public class EventParticipationServiceImpl implements EventParticipationService 
         EventParticipationEntity e = repo.findParticipationById(pctId)
                 .orElseThrow(() -> new IllegalArgumentException("참여 신청 없음"));
         e.setPctStatus("취소");
+        repo.saveParticipation(e);
+    }
+
+    @Override
+    @Transactional
+    public void deleteParticipation(Long pctId) {
+        // ✅ 기존 호환: 내부에서 현재 사용자 ID를 가져와서 권한 체크
+        deleteParticipation(pctId, getCurrentUserId());
+    }
+
+    @Override
+    @Transactional
+    public void deleteParticipation(Long pctId, Long userId) {
+        EventParticipationEntity e = repo.findParticipationById(pctId)
+                .orElseThrow(() -> new IllegalArgumentException("참여 신청 없음"));
+
+        // ✅ 본인 참여내역만 삭제 가능
+        if (e.getUserId() == null || !e.getUserId().equals(userId)) {
+            throw new IllegalStateException("본인 참여내역만 삭제할 수 있습니다.");
+        }
+
+        // ✅ 소프트 삭제
+
+        e.setPctStatus("참여삭제");
         repo.saveParticipation(e);
     }
 

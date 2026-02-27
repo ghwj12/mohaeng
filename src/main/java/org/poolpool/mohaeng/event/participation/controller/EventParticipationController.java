@@ -51,6 +51,15 @@ public class EventParticipationController {
         service.cancelParticipation(pctId);
         return ResponseEntity.ok().build();
     }
+
+    // ✅ 참여내역 삭제(소프트삭제: 상태를 '참여삭제'로 변경)
+    @PutMapping("/deleteParticipation")
+    public ResponseEntity<Void> deleteParticipation(
+            @RequestParam("pctId") Long pctId) {
+
+        service.deleteParticipation(pctId);
+        return ResponseEntity.ok().build();
+    }
     
     // 이벤트 정보 불러오기
     @GetMapping("/info/{eventId}")

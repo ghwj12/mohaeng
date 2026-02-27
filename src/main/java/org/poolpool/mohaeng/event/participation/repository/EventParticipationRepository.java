@@ -29,7 +29,9 @@ public class EventParticipationRepository {
     public List<EventParticipationEntity> findParticipationByUserId(Long userId) {
         return em.createQuery(
                         "select p from EventParticipationEntity p " +
+                        // ✅ 취소/참여삭제는 마이페이지 참여내역에서 숨김
                         "where p.userId = :userId " +
+                        "and p.pctStatus not in ('취소','참여삭제') " +
                         "order by p.pctDate desc",
                         EventParticipationEntity.class
                 )
