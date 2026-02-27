@@ -105,7 +105,12 @@ public class EventEntity {
     @Builder.Default // 빌더 사용 시 리스트 초기화 유지
     private List<FileEntity> eventFiles = new ArrayList<>();
     
-    public void changeStatusToDeleted() {
+    
+    public void changeStatusToHostDeleted() {
+        this.eventStatus = "행사삭제";
+    }
+
+public void changeStatusToDeleted() {
         this.eventStatus = "DELETED";
     }
     

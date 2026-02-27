@@ -14,6 +14,9 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     // ✅ 마이페이지: 내가 등록(주최)한 행사 목록
     Page<EventEntity> findByHost_UserIdAndEventStatusNot(Long userId, String eventStatus, Pageable pageable);
 
+    // ✅ 마이페이지: 내가 등록(주최)한 행사 목록 (여러 상태 제외)
+    Page<EventEntity> findByHost_UserIdAndEventStatusNotIn(Long userId, List<String> eventStatus, Pageable pageable);
+
     @Query("SELECT e FROM EventEntity e WHERE "
             + "(:keyword IS NULL OR e.title LIKE CONCAT('%', :keyword, '%') OR e.simpleExplain LIKE CONCAT('%', :keyword, '%')) AND "
             + "(:regionId IS NULL OR e.region.regionId BETWEEN :regionMin AND :regionMax) AND "
@@ -22,7 +25,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             + "(:categoryId IS NULL OR e.category.categoryId = :categoryId) AND "
             + "(:checkFree = false OR e.price = 0) AND "
             + "(:hideClosed = false OR e.endDate >= :today) AND "
-            + "e.eventStatus != 'DELETED' AND "
+            + "e.eventStatus NOT IN ('DELETED','행사삭제') AND "
             + "(:topicIds IS NULL OR e.topicIds LIKE CONCAT('%', :topicIds, '%'))")
     Page<EventEntity> searchEvents(
             @Param("keyword") String keyword,
@@ -39,7 +42,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
             Pageable pageable);
     @Query("SELECT new org.poolpool.mohaeng.event.list.dto.EventRegionCountDto(e.region.regionId, COUNT(e)) "
             + "FROM EventEntity e "
-            + "WHERE e.eventStatus != 'DELETED' "
+            + "WHERE e.eventStatus NOT IN ('DELETED','행사삭제') "
             + "GROUP BY e.region.regionId")
     List<EventRegionCountDto> countEventsByRegion();
     @Query(value = 
