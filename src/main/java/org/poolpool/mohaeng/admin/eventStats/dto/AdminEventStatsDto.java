@@ -33,6 +33,10 @@ public class AdminEventStatsDto {
 
     @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
     public static class EventAnalysisDetailResponse {
+    	
+    	private String topicIds;    // ✅ 추가
+    	private String hashtagIds;
+    	
         private Long eventId;
         private String title;
         private String thumbnail;           // ✅ 썸네일 URL (파일명만 — 프론트에서 경로 조합)
