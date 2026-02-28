@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.poolpool.mohaeng.auth.dto.request.LoginRequest;
 import org.poolpool.mohaeng.common.api.ApiResponse;
+import org.poolpool.mohaeng.event.host.service.EventHostService;
 import org.poolpool.mohaeng.user.dto.UserDto;
 import org.poolpool.mohaeng.user.service.UserService;
 import org.poolpool.mohaeng.user.type.SignupType;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserController {
 
 	private final UserService userService;
+	private final EventHostService eventHostService;
 	
 	//이메일(아이디) 중복 확인
 	@PostMapping("/checkId")
@@ -144,11 +147,11 @@ public class UserController {
 	@PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateProfile(
     		@AuthenticationPrincipal String userId,
-    		@RequestPart(name = "userInfo") UserDto user,
-    		@RequestPart(name = "deletePhoto", required = false) boolean deletePhoto,
-    		@RequestPart(name = "newPhoto", required = false) MultipartFile photo
-    ) {
-        user.setUserId(Long.valueOf(userId));
+    		@RequestPart(value = "userInfo") UserDto user,
+    		@RequestParam(value = "deletePhoto", defaultValue = "false") boolean deletePhoto,
+    		@RequestPart(value = "newPhoto", required = false) MultipartFile photo) {
+        
+		user.setUserId(Long.valueOf(userId));
         
         try {
             userService.patchUser(user, deletePhoto, photo);
@@ -167,11 +170,22 @@ public class UserController {
 	
 	//회원 탈퇴
 	@PatchMapping(value = "/withdrawal")
-	public ResponseEntity<ApiResponse<Void>> withdrawal(@ModelAttribute UserDto user) {
+	public ResponseEntity<ApiResponse<String>> withdrawal(
+			@AuthenticationPrincipal String userId, 
+			@RequestBody UserDto user) {
+		
+		user.setUserId(Long.valueOf(userId));
 
-		userService.patchWithdrawal(user);
+		// 회원 탈퇴 시 주최 행사 중 행사종료/삭제되지 않은 행사 존재 유무 조회
+		boolean hasActiveEvent = eventHostService.hasActiveEvent(user.getUserId());
+		
+		if (hasActiveEvent) {
+			return ResponseEntity.ok(ApiResponse.fail("주최 행사 존재", "행사 종료되지 않은 주최 행사가 존재하여 탈퇴가 불가합니다."));
+		} else {
+			userService.patchWithdrawal(user);
+			return ResponseEntity.ok(ApiResponse.ok("회원 탈퇴 성공", "회원 탈퇴 되었습니다."));			
+		}
         
-		return ResponseEntity.ok(ApiResponse.ok("회원 탈퇴 성공", null));
     }
 	
 	// 행사 등록 시 회원 정보 조회 (userId)

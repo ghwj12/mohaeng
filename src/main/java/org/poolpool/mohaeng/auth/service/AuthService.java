@@ -1,5 +1,6 @@
 package org.poolpool.mohaeng.auth.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.poolpool.mohaeng.auth.dto.request.LoginRequest;
@@ -42,12 +43,13 @@ public class AuthService {
     	UserEntity user = userRepository.findByEmail(email)
     	        .orElseThrow(() -> new BadCredentialsException("아이디 또는 비밀번호가 올바르지 않습니다."));
     	
-    	Long userId = user.getUserId();
-    	
         // 탈퇴한 회원인지 확인
         if (user.getUserStatus() == UserStatus.WITHDRAWAL) {
             throw new UsernameNotFoundException("탈퇴된 계정입니다.");
         }
+        
+        Long userId = user.getUserId();
+        user.setLastLoginAt(LocalDate.now()); 
     	
         String access = jwtTokenProvider.createAccessToken(userId, role);
         String refresh = jwtTokenProvider.createRefreshToken(userId, role);

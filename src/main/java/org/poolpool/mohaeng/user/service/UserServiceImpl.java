@@ -197,6 +197,7 @@ public class UserServiceImpl implements UserService{
 		UserEntity updateUser = userRepository.findById(userId)
 	            .orElseThrow(() -> new IllegalArgumentException("회원 없음"));
 		
+		updateUser.setEmail(updateUser.getEmail() + "#withdrawal" + userId);
 		updateUser.setUserStatus(UserStatus.WITHDRAWAL);
 		updateUser.setWithReasonId(user.getWithReasonId());
 		updateUser.setWithdrawalReason(user.getWithdrawalReason());
