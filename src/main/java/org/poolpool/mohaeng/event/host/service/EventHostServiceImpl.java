@@ -243,4 +243,15 @@ public class EventHostServiceImpl implements EventHostService {
                 .totalElements(p.getTotalElements())
                 .build();
     }
+    
+    // 회원 탈퇴 시 주최 행사 중 행사종료/삭제되지 않은 행사 존재 유무 조회
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasActiveEvent(Long hostId) {
+
+        return eventRepository.existsByHost_UserIdAndEventStatusNotIn(
+                hostId,
+                List.of("행사종료", "DELETED")
+        );
+    }
 }

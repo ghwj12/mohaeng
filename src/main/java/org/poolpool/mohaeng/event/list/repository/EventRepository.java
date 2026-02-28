@@ -94,4 +94,7 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     	List<EventDailyCountDto> countDailyEventsByRegion(
     	        @Param("regionMin") Long regionMin,
     	        @Param("regionMax") Long regionMax);
+    
+    // 회원 탈퇴 시 주최 행사 중 행사종료/삭제되지 않은 행사 존재 유무 조회
+    boolean existsByHost_UserIdAndEventStatusNotIn(Long hostId, List<String> statuses);
 }
