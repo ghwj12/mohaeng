@@ -11,6 +11,8 @@ import org.poolpool.mohaeng.admin.report.type.ReportResult;
 import org.poolpool.mohaeng.common.api.PageResponse;
 import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.list.repository.EventRepository;
+import org.poolpool.mohaeng.notification.service.NotificationService; // ✅ 추가
+import org.poolpool.mohaeng.notification.type.NotiTypeId;          // ✅ 추가
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,18 +27,26 @@ public class AdminReportServiceImpl implements AdminReportService {
 
     private final AdminReportRepository reportRepository;
     private final EventRepository eventRepository;
+    private final NotificationService notificationService; // ✅ 추가
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AdminReportListItemDto> getList(Pageable pageable) {
-        Page<AdminReportFEntity> page = reportRepository.findAllByOrderByCreatedAtDesc(pageable);
+        // ✅ 접수(PENDING)만 보여주기 + 최신순
+        Page<AdminReportFEntity> page =
+            reportRepository.findByReportResultOrderByCreatedAtDesc(ReportResult.PENDING, pageable);
 
         List<AdminReportListItemDto> items = page.getContent().stream()
             .map(r -> AdminReportListItemDto.fromEntity(r, getEventNameSafe(r.getEventId())))
             .toList();
 
-        return new PageResponse<>(items, pageable.getPageNumber(), pageable.getPageSize(),
-            page.getTotalElements(), page.getTotalPages());
+        return new PageResponse<>(
+            items,
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            page.getTotalElements(),
+            page.getTotalPages()
+        );
     }
 
     @Override
@@ -82,16 +92,25 @@ public class AdminReportServiceImpl implements AdminReportService {
             throw new IllegalStateException("이미 처리된 신고입니다.");
         }
 
-        // 1) 승인
-        r.setReportResult(ReportResult.APPROVED);
+        // ✅ 1) 신고자에게 "승인" 알림 생성
+        // reportId는 처리 후 신고를 삭제하니까 null 추천(알림 템플릿에서 신고 테이블 다시 조회하는 경우 대비)
+        notificationService.create(
+            r.getReporterId(),
+            NotiTypeId.REPORT_ACCEPT,
+            r.getEventId(),
+            null
+        );
 
-        // 2) 이벤트 비활성화(DELETED)
+        // ✅ 2) 이벤트 비활성화(DELETED)
         EventEntity event = eventRepository.findById(r.getEventId())
             .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 이벤트입니다."));
         event.changeStatusToDeleted();
 
-        // 3)  같은 이벤트의 다른 "모든 신고" 삭제(PENDING/REJECTED 포함)
+        // ✅ 3) 같은 이벤트의 다른 모든 신고 삭제
         reportRepository.deleteByEventIdAndReportIdNot(r.getEventId(), r.getReportId());
+
+        // ✅ 4) 현재 신고도 삭제 (요구사항: 처리되면 삭제)
+        reportRepository.delete(r);
     }
 
     @Override
@@ -104,7 +123,16 @@ public class AdminReportServiceImpl implements AdminReportService {
             throw new IllegalStateException("이미 처리된 신고입니다.");
         }
 
-        r.setReportResult(ReportResult.REJECTED);
+        // ✅ 1) 신고자에게 "반려" 알림 생성
+        notificationService.create(
+            r.getReporterId(),
+            NotiTypeId.REPORT_REJECT,
+            r.getEventId(),
+            null
+        );
+
+        // ✅ 2) 신고 삭제 (요구사항)
+        reportRepository.delete(r);
     }
 
     private String getEventNameSafe(Long eventId) {
