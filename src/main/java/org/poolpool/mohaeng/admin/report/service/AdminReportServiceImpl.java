@@ -11,8 +11,8 @@ import org.poolpool.mohaeng.admin.report.type.ReportResult;
 import org.poolpool.mohaeng.common.api.PageResponse;
 import org.poolpool.mohaeng.event.list.entity.EventEntity;
 import org.poolpool.mohaeng.event.list.repository.EventRepository;
-import org.poolpool.mohaeng.notification.service.NotificationService; // ✅ 추가
-import org.poolpool.mohaeng.notification.type.NotiTypeId;          // ✅ 추가
+import org.poolpool.mohaeng.notification.service.NotificationService;
+import org.poolpool.mohaeng.notification.type.NotiTypeId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,9 +32,8 @@ public class AdminReportServiceImpl implements AdminReportService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AdminReportListItemDto> getList(Pageable pageable) {
-        // ✅ 접수(PENDING)만 보여주기 + 최신순
-        Page<AdminReportFEntity> page =
-            reportRepository.findByReportResultOrderByCreatedAtDesc(ReportResult.PENDING, pageable);
+        // 너가 이미 최신순 repo 메서드 사용 중
+        Page<AdminReportFEntity> page = reportRepository.findAllByOrderByCreatedAtDesc(pageable);
 
         List<AdminReportListItemDto> items = page.getContent().stream()
             .map(r -> AdminReportListItemDto.fromEntity(r, getEventNameSafe(r.getEventId())))
@@ -92,24 +91,27 @@ public class AdminReportServiceImpl implements AdminReportService {
             throw new IllegalStateException("이미 처리된 신고입니다.");
         }
 
-        // ✅ 1) 신고자에게 "승인" 알림 생성
-        // reportId는 처리 후 신고를 삭제하니까 null 추천(알림 템플릿에서 신고 테이블 다시 조회하는 경우 대비)
-        notificationService.create(
+        // ✅ 0) 신고자에게 승인 알림 생성
+        // status1 NOT NULL 이므로 createWithStatus로 status1 채움
+        // notification_type(6번) 템플릿에 [REASON_CATEGORY]가 있으니 status1에 사유 넣는 게 제일 안전
+        notificationService.createWithStatus(
             r.getReporterId(),
             NotiTypeId.REPORT_ACCEPT,
             r.getEventId(),
-            null
+            null,                   // 신고는 처리 후 삭제할 거라 reportId는 null 추천
+            r.getReasonCategory(),  // ✅ status1 = 신고 사유
+            "APPROVED"              // status2(선택)
         );
 
-        // ✅ 2) 이벤트 비활성화(DELETED)
+        // 1) 이벤트 비활성화(DELETED)
         EventEntity event = eventRepository.findById(r.getEventId())
             .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 이벤트입니다."));
         event.changeStatusToDeleted();
 
-        // ✅ 3) 같은 이벤트의 다른 모든 신고 삭제
+        // 2) 같은 이벤트의 다른 모든 신고 삭제
         reportRepository.deleteByEventIdAndReportIdNot(r.getEventId(), r.getReportId());
 
-        // ✅ 4) 현재 신고도 삭제 (요구사항: 처리되면 삭제)
+        // ✅ 3) 현재 신고도 삭제(처리되면 삭제 정책)
         reportRepository.delete(r);
     }
 
@@ -123,15 +125,17 @@ public class AdminReportServiceImpl implements AdminReportService {
             throw new IllegalStateException("이미 처리된 신고입니다.");
         }
 
-        // ✅ 1) 신고자에게 "반려" 알림 생성
-        notificationService.create(
+        // ✅ 0) 신고자에게 반려 알림 생성 (status1 채움)
+        notificationService.createWithStatus(
             r.getReporterId(),
             NotiTypeId.REPORT_REJECT,
             r.getEventId(),
-            null
+            null,
+            r.getReasonCategory(),
+            "REJECTED"
         );
 
-        // ✅ 2) 신고 삭제 (요구사항)
+        // ✅ 1) 처리되면 삭제
         reportRepository.delete(r);
     }
 
